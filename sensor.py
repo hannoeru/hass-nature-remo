@@ -29,6 +29,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if appliance["type"] == "EL_SMART_METER":
             entities.append(NatureRemoE(coordinator, appliance))
             entities.append(NatureRemoEnergySensor(coordinator, appliance))
+            entities.append(NatureRemoReturnedEnergySensor(coordinator, appliance))
 
     for device in devices.values():
         # skip devices that include in appliances
@@ -162,6 +163,71 @@ class NatureRemoEnergySensor(NatureRemoBase, SensorEntity):
             "calc_mode": self.calc_mode
         }
 
+
+    async def async_added_to_hass(self):
+        self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
+
+    async def async_update(self):
+        await self._coordinator.async_request_refresh()
+
+
+class NatureRemoReturnedEnergySensor(NatureRemoBase, SensorEntity):
+    """Cumulative returned energy sensor (reverse direction) for Nature Remo E."""
+
+    def __init__(self, coordinator, appliance):
+        super().__init__(coordinator, appliance)
+        self._name = self._name.strip() + " Energy (Returned)"
+
+    @property
+    def state(self):
+        appliance = self._coordinator.data["appliances"][self._appliance_id]
+        smart_meter = appliance["smart_meter"]
+        props = {int(p["epc"]): float(p["val"]) for p in smart_meter["echonetlite_properties"]}
+
+        unit_table = {
+            0: 1,       # 1 kWh
+            1: 0.1,
+            2: 0.01,
+            3: 0.001,
+            4: 0.0001,
+            10: 10,
+            11: 100,
+            12: 1000,
+        }
+
+        try:
+            if 211 in props and 225 in props and 227 in props:
+                energy = props[227] * props[211] * unit_table[int(props[225])]
+            elif 225 in props and 227 in props:
+                energy = props[227] * unit_table[int(props[225])]
+            else:
+                energy = props.get(227)
+            return energy
+        except Exception as e:
+            _LOGGER.warning("Failed to calculate returned energy: %s", e)
+            return None
+
+    @property
+    def unit_of_measurement(self):
+        return UnitOfEnergy.KILO_WATT_HOUR
+
+    @property
+    def device_class(self):
+        return SensorDeviceClass.ENERGY
+
+    @property
+    def state_class(self):
+        return SensorStateClass.TOTAL_INCREASING
+
+    @property
+    def unique_id(self):
+        return f"{self._appliance_id}-cumulative-returned-energy"
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "calc_mode": self.calc_mode
+        }
 
     async def async_added_to_hass(self):
         self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
