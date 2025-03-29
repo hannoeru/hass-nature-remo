@@ -5,7 +5,9 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor.const import (SensorDeviceClass,
                                                    UnitOfPower,
                                                    UnitOfTemperature,
-                                                   UnitOfEnergy)
+                                                   UnitOfEnergy,
+                                                   SensorStateClass
+                                                   )
 
 from . import DOMAIN, NatureRemoBase, NatureRemoDeviceBase
 
