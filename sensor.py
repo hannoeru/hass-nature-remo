@@ -151,6 +151,10 @@ class NatureRemoEnergySensor(NatureRemoBase, SensorEntity):
         return SensorStateClass.TOTAL_INCREASING
     
     @property
+    def unique_id(self):
+        return f"{self._appliance_id}-cumulative-energy"
+    
+    @property
     def extra_state_attributes(self):
         return {
             "calc_mode": self.calc_mode
