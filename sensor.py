@@ -4,7 +4,8 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor.const import (SensorDeviceClass,
                                                    UnitOfPower,
-                                                   UnitOfTemperature)
+                                                   UnitOfTemperature,
+                                                   UnitOfEnergy)
 
 from . import DOMAIN, NatureRemoBase, NatureRemoDeviceBase
 
