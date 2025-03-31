@@ -18,13 +18,22 @@ Yet another [Home Assistant](https://www.home-assistant.io) component for [Natur
   - [x] Remember previous target temperatures when switching modes back and forth
 - [x] Energy Sensor (Nature Remo E/E Lite)
   - [x] Fetch current power usage
+  - [x] Fetch cumulative consumed energy
+  - [x] Fetch cumulative returned energy (for solar panels, etc.)
 - [ ] Switch
 - [ ] Light
 - [ ] TV
 - [x] Others
   - [x] Fetch sensor data
 
-Tested on Home Assistant Core 2021.3.3 on Docker
+Tested on Home Assistant Core 2024.3.4 (Linux)  
+Only energy sensor features (including cumulative consumed and returned energy) have been tested.  
+Other device features (e.g. air conditioners, switches) were not verified in this update.
+
+## Home Assistant Energy Dashboard support
+
+This integration supports Home Assistant's [Energy Dashboard](https://www.home-assistant.io/docs/energy/).
+If you're using Nature Remo E or E Lite, cumulative energy sensors (both consumed and returned) will automatically be available for configuration.
 
 ## Installation
 
