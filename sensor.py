@@ -89,41 +89,56 @@ class NatureRemoE(NatureRemoBase, SensorEntity):
         """
         await self._coordinator.async_request_refresh()
 
-class NatureRemoEnergySensor(NatureRemoBase, SensorEntity):
-    """Cumulative energy sensor (normal direction) for Nature Remo E."""
+class NatureRemoCumulativeEnergySensorBase(NatureRemoBase, SensorEntity):
+    """Cumulative energy sensor base for Nature Remo E."""
+
+    _epc: int
+    _sensor_type: str
 
     def __init__(self, coordinator, appliance):
         super().__init__(coordinator, appliance)
-        self._name = self._name.strip() + " Energy (Consumed)"
+        self._name = self._name.strip() + f" Energy ({self._sensor_type})"
 
+    UNIT_TABLE = {
+        0: 1,
+        1: 0.1,
+        2: 0.01,
+        3: 0.001,
+        4: 0.0001,
+        10: 10,
+        11: 100,
+        12: 1000,
+    }
+
+    @staticmethod
+    def calculate_energy(props: dict, epc: int) -> float:
+        try:
+            value = props.get(epc, 0)
+            coefficient = props.get(211, 1)
+            unit_code = int(props.get(225, 0))
+            unit = NatureRemoCumulativeEnergySensorBase.UNIT_TABLE.get(unit_code, 1)
+            return value * coefficient * unit
+        except Exception as e:
+            _LOGGER.warning("Energy calculation error for EPC %s: %s", epc, e)
+            return None
+        
+    @staticmethod
+    def epc_exists(props: dict, epc: int) -> bool:
+        return epc in props
+    
     @property
     def state(self):
         appliance = self._coordinator.data["appliances"][self._appliance_id]
         smart_meter = appliance["smart_meter"]
         props = {int(p["epc"]): float(p["val"]) for p in smart_meter["echonetlite_properties"]}
+        return self.calculate_energy(props, self._epc)
 
-        unit_table = {
-                    0: 1,       # 1 kWh
-                    1: 0.1,
-                    2: 0.01,
-                    3: 0.001,
-                    4: 0.0001,
-                    10: 10,
-                    11: 100,
-                    12: 1000,
-                }
-
-        value = props.get(224, 0)
-        coefficient = props.get(211, 1)
-        unit_code = int(props.get(225, 0))
-        unit = unit_table.get(unit_code, 1)
-
-        try:
-            energy = value * coefficient * unit
-            return energy
-        except Exception as e:
-            _LOGGER.warning("Failed to calculate energy: %s", e)
-            return None
+    @property
+    def available(self):
+        appliance = self._coordinator.data["appliances"][self._appliance_id]
+        smart_meter = appliance["smart_meter"]
+        props = {int(p["epc"]): float(p["val"]) for p in smart_meter["echonetlite_properties"]}
+        return self.epc_exists(props, self._epc)
 
     @property
     def unit_of_measurement(self):
@@ -139,14 +154,7 @@ class NatureRemoEnergySensor(NatureRemoBase, SensorEntity):
     
     @property
     def unique_id(self):
-        return f"{self._appliance_id}-cumulative-energy"
-    
-    @property
-    def available(self):
-        appliance = self._coordinator.data["appliances"][self._appliance_id]
-        smart_meter = appliance["smart_meter"]
-        epcs = {int(p["epc"]) for p in smart_meter["echonetlite_properties"]}
-        return 224 in epcs
+        return f"{self._appliance_id}-cumulative-energy-{self._sensor_type.lower()}"
 
     async def async_added_to_hass(self):
         self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
@@ -155,70 +163,14 @@ class NatureRemoEnergySensor(NatureRemoBase, SensorEntity):
         await self._coordinator.async_request_refresh()
 
 
-class NatureRemoReturnedEnergySensor(NatureRemoBase, SensorEntity):
-    """Cumulative returned energy sensor (reverse direction) for Nature Remo E."""
+class NatureRemoEnergySensor(NatureRemoCumulativeEnergySensorBase):
+    _epc = 224
+    _sensor_type = "Consumed"
 
-    def __init__(self, coordinator, appliance):
-        super().__init__(coordinator, appliance)
-        self._name = self._name.strip() + " Energy (Returned)"
 
-    @property
-    def state(self):
-        appliance = self._coordinator.data["appliances"][self._appliance_id]
-        smart_meter = appliance["smart_meter"]
-        props = {int(p["epc"]): float(p["val"]) for p in smart_meter["echonetlite_properties"]}
-
-        unit_table = {
-            0: 1,       # 1 kWh
-            1: 0.1,
-            2: 0.01,
-            3: 0.001,
-            4: 0.0001,
-            10: 10,
-            11: 100,
-            12: 1000,
-        }
-
-        value = props.get(227, 0)
-        coefficient = props.get(211, 1)
-        unit_code = int(props.get(225, 0))
-        unit = unit_table.get(unit_code, 1)
-
-        try:
-            energy = value * coefficient * unit
-            return energy
-        except Exception as e:
-            _LOGGER.warning("Failed to calculate returned energy: %s", e)
-            return None
-
-    @property
-    def unit_of_measurement(self):
-        return UnitOfEnergy.KILO_WATT_HOUR
-
-    @property
-    def device_class(self):
-        return SensorDeviceClass.ENERGY
-
-    @property
-    def state_class(self):
-        return SensorStateClass.TOTAL_INCREASING
-
-    @property
-    def unique_id(self):
-        return f"{self._appliance_id}-cumulative-returned-energy"
-
-    @property
-    def available(self):
-        appliance = self._coordinator.data["appliances"][self._appliance_id]
-        smart_meter = appliance["smart_meter"]
-        epcs = {int(p["epc"]) for p in smart_meter["echonetlite_properties"]}
-        return 227 in epcs
-    
-    async def async_added_to_hass(self):
-        self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
-
-    async def async_update(self):
-        await self._coordinator.async_request_refresh()
+class NatureRemoReturnedEnergySensor(NatureRemoCumulativeEnergySensorBase):
+    _epc = 227
+    _sensor_type = "Returned"
 
 
 class NatureRemoTemperatureSensor(NatureRemoDeviceBase, SensorEntity):
