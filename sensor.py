@@ -172,13 +172,13 @@ class NatureRemoReturnedEnergySensor(NatureRemoBase, SensorEntity):
             12: 1000,
         }
 
+        value = props.get(227, 0)
+        coefficient = props.get(211, 1)
+        unit_code = int(props.get(225, 0))
+        unit = unit_table.get(unit_code, 1)
+
         try:
-            if 211 in props and 225 in props and 227 in props:
-                energy = props[227] * props[211] * unit_table[int(props[225])]
-            elif 225 in props and 227 in props:
-                energy = props[227] * unit_table[int(props[225])]
-            else:
-                energy = props.get(227)
+            energy = value * coefficient * unit
             return energy
         except Exception as e:
             _LOGGER.warning("Failed to calculate returned energy: %s", e)
@@ -200,11 +200,7 @@ class NatureRemoReturnedEnergySensor(NatureRemoBase, SensorEntity):
     def unique_id(self):
         return f"{self._appliance_id}-cumulative-returned-energy"
 
-    @property
-    def extra_state_attributes(self):
-        return {
-            "calc_mode": self.calc_mode
-        }
+
 
     async def async_added_to_hass(self):
         self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
