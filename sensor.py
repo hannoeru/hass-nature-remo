@@ -140,6 +140,13 @@ class NatureRemoEnergySensor(NatureRemoBase, SensorEntity):
     @property
     def unique_id(self):
         return f"{self._appliance_id}-cumulative-energy"
+    
+    @property
+    def available(self):
+        appliance = self._coordinator.data["appliances"][self._appliance_id]
+        smart_meter = appliance["smart_meter"]
+        epcs = {int(p["epc"]) for p in smart_meter["echonetlite_properties"]}
+        return 224 in epcs
 
     async def async_added_to_hass(self):
         self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
@@ -200,8 +207,13 @@ class NatureRemoReturnedEnergySensor(NatureRemoBase, SensorEntity):
     def unique_id(self):
         return f"{self._appliance_id}-cumulative-returned-energy"
 
-
-
+    @property
+    def available(self):
+        appliance = self._coordinator.data["appliances"][self._appliance_id]
+        smart_meter = appliance["smart_meter"]
+        epcs = {int(p["epc"]) for p in smart_meter["echonetlite_properties"]}
+        return 227 in epcs
+    
     async def async_added_to_hass(self):
         self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
 
