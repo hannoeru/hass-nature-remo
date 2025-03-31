@@ -1,4 +1,5 @@
 """The Nature Remo integration."""
+
 import logging
 from datetime import timedelta
 
@@ -26,12 +27,8 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_ACCESS_TOKEN): cv.string,
-                vol.Optional(CONF_COOL_TEMP, default=DEFAULT_COOL_TEMP): vol.Coerce(
-                    int
-                ),
-                vol.Optional(CONF_HEAT_TEMP, default=DEFAULT_HEAT_TEMP): vol.Coerce(
-                    int
-                ),
+                vol.Optional(CONF_COOL_TEMP, default=DEFAULT_COOL_TEMP): vol.Coerce(int),
+                vol.Optional(CONF_HEAT_TEMP, default=DEFAULT_HEAT_TEMP): vol.Coerce(int),
             }
         )
     },
@@ -86,9 +83,7 @@ class NatureRemoAPI:
         """Post any request"""
         _LOGGER.debug("Trying to request post:%s, data:%s", path, data)
         headers = {"Authorization": f"Bearer {self._access_token}"}
-        response = await self._session.post(
-            f"{_RESOURCE}{path}", data=data, headers=headers
-        )
+        response = await self._session.post(f"{_RESOURCE}{path}", data=data, headers=headers)
         return await response.json()
 
 
@@ -128,6 +123,7 @@ class NatureRemoBase(Entity):
             "sw_version": self._device["firmware_version"],
         }
 
+
 class NatureRemoDeviceBase(Entity):
     """Nature Remo Device entity base class."""
 
@@ -165,9 +161,7 @@ class NatureRemoDeviceBase(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
-        )
+        self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
 
     async def async_update(self):
         """Update the entity.

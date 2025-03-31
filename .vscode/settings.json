@@ -1,0 +1,33 @@
+{
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    }
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "notebook.formatOnSave.enabled": true,
+  "notebook.codeActionsOnSave": {
+    "notebook.source.fixAll": "explicit",
+    "notebook.source.organizeImports": "explicit"
+  },
+  "notebook.output.wordWrap": true,
+  "notebook.output.textLineLimit": 200,
+  "jupyter.debugJustMyCode": false,
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["tests"],
+  "files.exclude": {
+    "**/*.egg-info": true,
+    "**/htmlcov": true,
+    "**/~$*": true,
+    "**/.coverage.*": true,
+    "**/.venv": true,
+    "**/__pycache__": true,
+    "**/.mypy_cache": true,
+    "**/.pytest_cache": true,
+  }
+}

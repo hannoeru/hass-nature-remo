@@ -1,9 +1,9 @@
 """Support for Nature Remo AC."""
+
 import logging
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (ClimateEntityFeature,
-                                                    HVACMode)
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import callback
 
@@ -11,7 +11,13 @@ from . import CONF_COOL_TEMP, CONF_HEAT_TEMP, DOMAIN, NatureRemoBase
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.SWING_MODE | ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+SUPPORT_FLAGS = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.FAN_MODE
+    | ClimateEntityFeature.SWING_MODE
+    | ClimateEntityFeature.TURN_ON
+    | ClimateEntityFeature.TURN_OFF
+)
 
 MODE_HA_TO_REMO = {
     HVACMode.AUTO: "auto",
@@ -52,6 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class NatureRemoAC(NatureRemoBase, ClimateEntity):
     """Implementation of a Nature Remo E sensor."""
+
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, api, appliance, config):
@@ -158,11 +165,10 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         return {
             "previous_target_temperature": self._last_target_temperature,
         }
-    
+
     async def async_turn_off(self):
         """Turn the entity off."""
         await self.async_set_hvac_mode(HVACMode.OFF)
-
 
     async def async_turn_on(self):
         """Turn the entity on."""
@@ -209,9 +215,7 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self._update_callback)
-        )
+        self.async_on_remove(self._coordinator.async_add_listener(self._update_callback))
 
     async def async_update(self):
         """Update the entity.
@@ -226,7 +230,7 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         try:
             self._target_temperature = float(ac_settings["temp"])
             self._last_target_temperature[self._remo_mode] = ac_settings["temp"]
-        except:
+        except (KeyError, ValueError):
             self._target_temperature = None
 
         if ac_settings["button"] == MODE_HA_TO_REMO[HVACMode.OFF]:
@@ -249,9 +253,7 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         self.async_write_ha_state()
 
     async def _post(self, data):
-        response = await self._api.post(
-            f"/appliances/{self._appliance_id}/aircon_settings", data
-        )
+        response = await self._api.post(f"/appliances/{self._appliance_id}/aircon_settings", data)
         self._update(response)
         self.async_write_ha_state()
 
