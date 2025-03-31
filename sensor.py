@@ -97,21 +97,6 @@ class NatureRemoEnergySensor(NatureRemoBase, SensorEntity):
         self._name = self._name.strip() + " Energy (Consumed)"
 
     @property
-    def calc_mode(self):
-        """Return calculation mode based on available EPCs"""
-        appliance = self._coordinator.data["appliances"][self._appliance_id]
-        smart_meter = appliance["smart_meter"]
-        epcs = {int(p["epc"]) for p in smart_meter["echonetlite_properties"]}
-
-        if 211 in epcs:  # coefficient (D3)
-            return "coefficient"
-        elif 225 in epcs and 215 in epcs:  # unit + digits (E1, E2)
-            return "unit_digits"
-        else:
-            return "raw"
-
-
-    @property
     def state(self):
         appliance = self._coordinator.data["appliances"][self._appliance_id]
         smart_meter = appliance["smart_meter"]
@@ -128,14 +113,13 @@ class NatureRemoEnergySensor(NatureRemoBase, SensorEntity):
                     12: 1000,
                 }
 
+        value = props.get(224, 0)
+        coefficient = props.get(211, 1)
+        unit_code = int(props.get(225, 0))
+        unit = unit_table.get(unit_code, 1)
+
         try:
-            mode = self.calc_mode
-            if mode == "coefficient":
-                energy = props[224] * props[211] * unit_table[int(props[225])]
-            elif mode == "unit_digits":
-                energy = props[224] * unit_table[props[225]]
-            elif mode == "raw":
-                energy = props[224]
+            energy = value * coefficient * unit
             return energy
         except Exception as e:
             _LOGGER.warning("Failed to calculate energy: %s", e)
@@ -156,13 +140,6 @@ class NatureRemoEnergySensor(NatureRemoBase, SensorEntity):
     @property
     def unique_id(self):
         return f"{self._appliance_id}-cumulative-energy"
-    
-    @property
-    def extra_state_attributes(self):
-        return {
-            "calc_mode": self.calc_mode
-        }
-
 
     async def async_added_to_hass(self):
         self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
