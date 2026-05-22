@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTemperature
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfEnergy, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -70,7 +70,7 @@ class NatureRemoE(NatureRemoBase, SensorEntity):
             native_unit_of_measurement=UnitOfPower.WATT,
         )
 
-    @cached_property
+    @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         appliance = self._coordinator.data["appliances"][self._appliance_id]
@@ -134,14 +134,14 @@ class NatureRemoCumulativeEnergySensorBase(NatureRemoBase, SensorEntity):
     def epc_exists(props: Dict[int, float], epc: int) -> bool:
         return epc in props
 
-    @cached_property
+    @property
     def native_value(self) -> float | None:
         appliance = self._coordinator.data["appliances"][self._appliance_id]
         smart_meter = appliance["smart_meter"]
         props = {int(p["epc"]): float(p["val"]) for p in smart_meter["echonetlite_properties"]}
         return self.calculate_energy(props, self._epc)
 
-    @cached_property
+    @property
     def available(self) -> bool:
         appliance = self._coordinator.data["appliances"][self._appliance_id]
         smart_meter = appliance["smart_meter"]
@@ -185,6 +185,11 @@ class NatureRemoTemperatureSensor(NatureRemoDeviceBase, SensorEntity):
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @cached_property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return self._device["id"] + "-temperature"
+
+    @property
     def native_value(self) -> Optional[float]:
         """Return the state of the sensor."""
         device = self._coordinator.data["devices"][self._device["id"]]
@@ -197,9 +202,15 @@ class NatureRemoHumiditySensor(NatureRemoDeviceBase, SensorEntity):
     def __init__(self, coordinator: DataUpdateCoordinator, device: Dict[str, Any]) -> None:
         super().__init__(coordinator, device)
         self._name = self._name.strip() + " Humidity"
+        self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_device_class = SensorDeviceClass.HUMIDITY
 
     @cached_property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return self._device["id"] + "-humidity"
+
+    @property
     def native_value(self) -> Optional[float]:
         """Return the state of the sensor."""
         device = self._coordinator.data["devices"][self._device["id"]]
@@ -212,6 +223,7 @@ class NatureRemoIlluminanceSensor(NatureRemoDeviceBase, SensorEntity):
     def __init__(self, coordinator: DataUpdateCoordinator, device: Dict[str, Any]) -> None:
         super().__init__(coordinator, device)
         self._name = self._name.strip() + " Illuminance"
+        self._attr_native_unit_of_measurement = LIGHT_LUX
         self._attr_device_class = SensorDeviceClass.ILLUMINANCE
 
     @cached_property
@@ -219,7 +231,7 @@ class NatureRemoIlluminanceSensor(NatureRemoDeviceBase, SensorEntity):
         """Return a unique ID."""
         return self._device["id"] + "-illuminance"
 
-    @cached_property
+    @property
     def native_value(self) -> Optional[float]:
         """Return the state of the sensor."""
         device = self._coordinator.data["devices"][self._device["id"]]
