@@ -26,7 +26,7 @@ Yet another [Home Assistant](https://www.home-assistant.io) component for [Natur
 - [x] Others
   - [x] Fetch sensor data
 
-Tested on Home Assistant Core 2024.3.4 (Linux)
+Compatibility target: Home Assistant Core 2026.5.3.
 Only energy sensor features (including cumulative consumed and returned energy) have been tested.
 Other device features (e.g. air conditioners, switches) were not verified in this update.
 
@@ -88,7 +88,7 @@ This section contains information for developers who want to contribute to this 
 
 ### Prerequisites
 
-- Python 3.12 or higher
+- Python 3.14.2 or higher
 - [uv](https://docs.astral.sh/uv/) - Python package manager
 
 ### Setup Development Environment

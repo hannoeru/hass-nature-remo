@@ -247,7 +247,7 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         try:
             self._target_temperature = float(ac_settings["temp"])
             self._last_target_temperature[self._remo_mode] = ac_settings["temp"]  # type: ignore[assignment]
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             self._target_temperature = None
 
         if ac_settings["button"] == MODE_HA_TO_REMO[HVACMode.OFF]:
