@@ -1,7 +1,7 @@
 {
   "domain": "nature_remo",
   "name": "Nature Remo",
-  "version": "0.1.0",
+  "version": "0.6",
   "config_flow": true,
   "documentation": "https://github.com/hannoeru/hass-nature-remo",
   "issue_tracker": "https://github.com/hannoeru/hass-nature-remo/issues",
