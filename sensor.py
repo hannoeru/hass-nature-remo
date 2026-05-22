@@ -13,6 +13,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from propcache.api import cached_property
 
 from . import DOMAIN, NatureRemoBase, NatureRemoDeviceBase
+from .echonet import (
+    EPC_CUMULATIVE_CONSUMED_ENERGY,
+    EPC_CUMULATIVE_RETURNED_ENERGY,
+    EPC_MEASURED_INSTANTANEOUS_POWER,
+    calculate_cumulative_energy,
+    has_epc,
+    parse_echonet_properties,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,11 +44,10 @@ async def async_setup_platform(
     for appliance in appliances.values():
         if appliance["type"] == "EL_SMART_METER":
             entities.append(NatureRemoE(coordinator, appliance))
-            # Check for EPC 224 (Consumed Energy)
-            if any(prop.get("epc") == 224 for prop in appliance.get("echonetlite_properties", [])):
+            properties = _smart_meter_properties(appliance)
+            if has_epc(properties, EPC_CUMULATIVE_CONSUMED_ENERGY):
                 entities.append(NatureRemoEnergySensor(coordinator, appliance))
-            # Check for EPC 227 (Returned Energy)
-            if any(prop.get("epc") == 227 for prop in appliance.get("echonetlite_properties", [])):
+            if has_epc(properties, EPC_CUMULATIVE_RETURNED_ENERGY):
                 entities.append(NatureRemoReturnedEnergySensor(coordinator, appliance))
     for device in devices.values():
         # skip devices that include in appliances
@@ -55,6 +62,11 @@ async def async_setup_platform(
                 entities.append(NatureRemoIlluminanceSensor(coordinator, device))
 
     async_add_entities(entities)
+
+
+def _smart_meter_properties(appliance: Dict[str, Any]) -> dict[int, float]:
+    """Return parsed ECHONET Lite properties for a smart meter appliance."""
+    return parse_echonet_properties(appliance["smart_meter"]["echonetlite_properties"])
 
 
 class NatureRemoE(NatureRemoBase, SensorEntity):
@@ -74,10 +86,8 @@ class NatureRemoE(NatureRemoBase, SensorEntity):
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         appliance = self.coordinator.data["appliances"][self._appliance_id]
-        smart_meter = appliance["smart_meter"]
-        echonetlite_properties = smart_meter["echonetlite_properties"]
-        measured_instantaneous = next(
-            value["val"] for value in echonetlite_properties if value["epc"] == 231
+        measured_instantaneous = _smart_meter_properties(appliance).get(
+            EPC_MEASURED_INSTANTANEOUS_POWER
         )
         _LOGGER.debug("Current state: %sW", measured_instantaneous)
         return measured_instantaneous
@@ -96,46 +106,22 @@ class NatureRemoCumulativeEnergySensorBase(NatureRemoBase, SensorEntity):
         self._attr_device_class = SensorDeviceClass.ENERGY
         self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
-    UNIT_TABLE: Dict[int, float] = {
-        0: 1,
-        1: 0.1,
-        2: 0.01,
-        3: 0.001,
-        4: 0.0001,
-        10: 10,
-        11: 100,
-        12: 1000,
-    }
-
-    @staticmethod
-    def calculate_energy(props: Dict[int, float], epc: int) -> Optional[float]:
-        try:
-            value = props.get(epc, 0)
-            coefficient = props.get(211, 1)
-            unit_code = int(props.get(225, 0))
-            unit = NatureRemoCumulativeEnergySensorBase.UNIT_TABLE.get(unit_code, 1)
-            return value * coefficient * unit
-        except Exception as e:
-            _LOGGER.warning("Energy calculation error for EPC %s: %s", epc, e)
-            return None
-
-    @staticmethod
-    def epc_exists(props: Dict[int, float], epc: int) -> bool:
-        return epc in props
-
     @property
     def native_value(self) -> float | None:
         appliance = self.coordinator.data["appliances"][self._appliance_id]
-        smart_meter = appliance["smart_meter"]
-        props = {int(p["epc"]): float(p["val"]) for p in smart_meter["echonetlite_properties"]}
-        return self.calculate_energy(props, self._epc)
+        try:
+            return calculate_cumulative_energy(_smart_meter_properties(appliance), self._epc)
+        except (KeyError, TypeError, ValueError) as err:
+            _LOGGER.warning("Energy calculation error for EPC %s: %s", self._epc, err)
+            return None
 
     @property
     def available(self) -> bool:
         appliance = self.coordinator.data["appliances"][self._appliance_id]
-        smart_meter = appliance["smart_meter"]
-        props = {int(p["epc"]): float(p["val"]) for p in smart_meter["echonetlite_properties"]}
-        return self.epc_exists(props, self._epc)
+        try:
+            return has_epc(_smart_meter_properties(appliance), self._epc)
+        except KeyError, TypeError, ValueError:
+            return False
 
     @cached_property
     def unique_id(self) -> str | None:
