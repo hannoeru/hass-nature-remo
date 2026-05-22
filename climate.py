@@ -245,7 +245,10 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         self._swing_mode = ac_settings["dir"] or None
 
         if device is not None:
-            self._current_temperature = float(device["newest_events"]["te"]["val"])
+            try:
+                self._current_temperature = float(device["newest_events"]["te"]["val"])
+            except KeyError, TypeError, ValueError:
+                self._current_temperature = None
 
     @callback
     def _handle_coordinator_update(self) -> None:
