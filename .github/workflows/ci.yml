@@ -63,6 +63,7 @@ jobs:
           mkdir -p custom_components/nature_remo
           cp __init__.py climate.py config_flow.py echonet.py manifest.json sensor.py custom_components/nature_remo/
           cp -R translations custom_components/nature_remo/translations
+          rm __init__.py climate.py config_flow.py echonet.py manifest.json sensor.py
 
       - name: Run hassfest
         uses: home-assistant/actions/hassfest@master
