@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nature Remo",
+        "description": "Nature Remo のアクセストークンを入力してください。",
+        "data": {
+          "access_token": "アクセストークン",
+          "cool_temperature": "冷房の既定温度",
+          "heat_temperature": "暖房の既定温度"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nature Remo に接続できませんでした。アクセストークンを確認して、もう一度お試しください。",
+      "unknown": "予期しないエラー"
+    },
+    "abort": {
+      "already_configured": "Nature Remo はすでに設定されています"
+    }
+  }
+}

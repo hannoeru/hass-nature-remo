@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nature Remo",
+        "description": "請輸入你的 Nature Remo 存取權杖。",
+        "data": {
+          "access_token": "存取權杖",
+          "cool_temperature": "預設冷氣溫度",
+          "heat_temperature": "預設暖氣溫度"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "無法連線至 Nature Remo。請確認存取權杖後再試一次。",
+      "unknown": "發生未預期的錯誤"
+    },
+    "abort": {
+      "already_configured": "Nature Remo 已設定完成"
+    }
+  }
+}

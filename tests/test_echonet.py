@@ -1,14 +1,6 @@
 """Tests for ECHONET Lite smart meter helpers."""
 
-import importlib.util
-from pathlib import Path
-
-_MODULE_PATH = Path(__file__).parents[1] / "echonet.py"
-_SPEC = importlib.util.spec_from_file_location("echonet", _MODULE_PATH)
-assert _SPEC is not None
-assert _SPEC.loader is not None
-echonet = importlib.util.module_from_spec(_SPEC)
-_SPEC.loader.exec_module(echonet)
+from custom_components.nature_remo import echonet
 
 
 def test_parse_echonet_properties_accepts_numeric_strings() -> None:
@@ -38,6 +30,18 @@ def test_calculate_cumulative_energy_applies_coefficient_and_unit() -> None:
             echonet.EPC_CUMULATIVE_CONSUMED_ENERGY,
         )
         == 24.6
+    )
+
+
+def test_calculate_cumulative_energy_defaults_missing_coefficient_and_unit() -> None:
+    properties = {echonet.EPC_CUMULATIVE_RETURNED_ENERGY: 42}
+
+    assert (
+        echonet.calculate_cumulative_energy(
+            properties,
+            echonet.EPC_CUMULATIVE_RETURNED_ENERGY,
+        )
+        == 42
     )
 
 
