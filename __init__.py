@@ -6,11 +6,12 @@ from typing import Any, Dict
 
 import voluptuous as vol
 from aiohttp import ClientError, ClientSession
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
@@ -25,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://api.nature.global/1"
 
 DOMAIN = "nature_remo"
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 CONF_COOL_TEMP = "cool_temperature"
 CONF_HEAT_TEMP = "heat_temperature"
@@ -47,28 +49,53 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Nature Remo component."""
-    _LOGGER.debug("Setting up Nature Remo component.")
-    access_token = config[DOMAIN][CONF_ACCESS_TOKEN]
+    """Set up Nature Remo component from YAML."""
+    hass.data.setdefault(DOMAIN, {})
+
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=dict(config[DOMAIN]),
+            )
+        )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Nature Remo from a config entry."""
+    _LOGGER.debug("Setting up Nature Remo config entry.")
+    access_token = entry.data[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
     api = NatureRemoAPI(access_token, session)
-    coordinator = hass.data[DOMAIN] = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name="Nature Remo update",
         update_method=api.get,
         update_interval=DEFAULT_UPDATE_INTERVAL,
     )
-    await coordinator.async_refresh()
-    hass.data[DOMAIN] = {
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
         "coordinator": coordinator,
-        "config": config[DOMAIN],
+        "config": entry.data,
     }
 
-    await discovery.async_load_platform(hass, "sensor", DOMAIN, {}, config)
-    await discovery.async_load_platform(hass, "climate", DOMAIN, {}, config)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a Nature Remo config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
 
 
 class NatureRemoAPI:
@@ -140,7 +167,6 @@ class NatureRemoBase(CoordinatorEntity):
     @cached_property
     def device_info(self) -> DeviceInfo | None:
         """Return the device info for the sensor."""
-        # Since device registration requires Config Entries, this dosen't work for now
         return {
             "identifiers": {(DOMAIN, self._device["id"])},
             "name": self._device["name"] or "Unknown Device",
@@ -176,7 +202,6 @@ class NatureRemoDeviceBase(CoordinatorEntity):
     @cached_property
     def device_info(self) -> DeviceInfo | None:
         """Return the device info for the sensor."""
-        # Since device registration requires Config Entries, this dosen't work for now
         return {
             "identifiers": {(DOMAIN, self._device["id"])},
             "name": self._device["name"] or "Unknown Device",

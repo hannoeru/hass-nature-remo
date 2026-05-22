@@ -6,9 +6,9 @@ from typing import Any, Dict, Optional
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfEnergy, UnitOfPower, UnitOfTemperature
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from propcache.api import cached_property
 
@@ -25,17 +25,14 @@ from .echonet import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: Optional[DiscoveryInfoType] = None,
 ) -> None:
-    """Set up the Nature Remo E sensor."""
-    if discovery_info is None:
-        return
+    """Set up the Nature Remo E sensors."""
     _LOGGER.debug("Setting up sensor platform.")
-    coordinator = hass.data[DOMAIN]["coordinator"]
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     appliances = coordinator.data["appliances"]
     devices = coordinator.data["devices"]
 

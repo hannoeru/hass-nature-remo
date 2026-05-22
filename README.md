@@ -59,8 +59,11 @@ Enter the following information in the dialog and click `Add` button.
     └── nature_remo
         ├── __init__.py
         ├── climate.py
+        ├── config_flow.py
+        ├── echonet.py
         ├── manifest.json
-        └── sensor.py
+        ├── sensor.py
+        └── translations/
 ```
 
 ### Install via git submodule
@@ -74,8 +77,11 @@ git submodule add https://github.com/yutoyazaki/hass-nature-remo.git {path_to_cu
 ## Configuration
 
 1. Go to https://home.nature.global and sign in/up
-1. Generate access token
-1. Add the following codes to your `configuration.yaml` file
+1. Generate an access token
+1. In Home Assistant, go to **Settings → Devices & services → Add integration**
+1. Search for **Nature Remo** and enter your access token
+
+Existing YAML configuration is imported automatically on startup:
 
 ```yaml
 nature_remo:
@@ -159,6 +165,8 @@ This project uses several development tools to maintain code quality:
 hass-nature-remo/
 ├── __init__.py          # Main integration setup
 ├── climate.py           # Climate entity implementation
+├── config_flow.py       # UI setup and YAML import flow
+├── echonet.py           # ECHONET Lite smart-meter helpers
 ├── sensor.py            # Sensor entities implementation
 ├── manifest.json        # Home Assistant integration manifest
 ├── pyproject.toml       # Project configuration and dependencies

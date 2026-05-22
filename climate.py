@@ -5,10 +5,10 @@ from typing import Any, Dict, List, Optional
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from propcache.api import cached_property
 
@@ -43,19 +43,16 @@ MODE_REMO_TO_HA: dict[str, HVACMode] = {
 }
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: Optional[DiscoveryInfoType] = None,
 ) -> None:
     """Set up the Nature Remo AC."""
-    if discovery_info is None:
-        return
     _LOGGER.debug("Setting up climate platform.")
-    coordinator = hass.data[DOMAIN]["coordinator"]
-    api = hass.data[DOMAIN]["api"]
-    config = hass.data[DOMAIN]["config"]
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    api = hass.data[DOMAIN][entry.entry_id]["api"]
+    config = hass.data[DOMAIN][entry.entry_id]["config"]
     appliances = coordinator.data["appliances"]
     async_add_entities(
         [

@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nature Remo",
+        "description": "Enter your Nature Remo access token.",
+        "data": {
+          "access_token": "Access token",
+          "cool_temperature": "Default cooling temperature",
+          "heat_temperature": "Default heating temperature"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Nature Remo. Check the access token and try again.",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Nature Remo is already configured"
+    }
+  }
+}
