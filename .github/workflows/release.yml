@@ -60,6 +60,39 @@ jobs:
 
       - name: Upload release asset
         if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
+        uses: actions/github-script@v8
         with:
-          files: dist/nature_remo.zip
+          script: |
+            const fs = require('fs')
+            const path = require('path')
+
+            const assetPath = 'dist/nature_remo.zip'
+            const assetName = path.basename(assetPath)
+            const { owner, repo } = context.repo
+            const release_id = context.payload.release.id
+
+            const { data: assets } = await github.rest.repos.listReleaseAssets({
+              owner,
+              repo,
+              release_id,
+            })
+            const existingAsset = assets.find((asset) => asset.name === assetName)
+            if (existingAsset) {
+              await github.rest.repos.deleteReleaseAsset({
+                owner,
+                repo,
+                asset_id: existingAsset.id,
+              })
+            }
+
+            await github.rest.repos.uploadReleaseAsset({
+              owner,
+              repo,
+              release_id,
+              name: assetName,
+              data: fs.readFileSync(assetPath),
+              headers: {
+                'content-type': 'application/zip',
+                'content-length': fs.statSync(assetPath).size,
+              },
+            })
