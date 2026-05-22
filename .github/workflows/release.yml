@@ -31,6 +31,18 @@ jobs:
               sys.exit(f"manifest.json version {version!r} does not match release tag {tag!r}")
           PY
 
+      - name: Set up pnpm
+        if: github.event_name == 'release'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: GitHub Release
+        if: github.event_name == 'release'
+        run: pnpm dlx changelogithub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build HACS release zip
         run: |
           mkdir -p dist/nature_remo

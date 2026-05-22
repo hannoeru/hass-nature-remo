@@ -164,7 +164,7 @@ This project uses several development tools to maintain code quality:
 This repository uses GitHub Actions for release safety:
 
 - `CI` runs Ruff, mypy, pytest, HACS validation, and Home Assistant hassfest validation on pushes and pull requests.
-- `Release` runs when a GitHub release is published, verifies the release tag matches `manifest.json`'s `version`, and uploads `nature_remo.zip` as the HACS `zip_release` artifact declared in `hacs.json`.
+- `Release` runs when a GitHub release is published, verifies the release tag matches `manifest.json`'s `version`, generates GitHub release notes with `changelogithub`, and uploads `nature_remo.zip` as the HACS `zip_release` artifact declared in `hacs.json`.
 
 To publish a release:
 
