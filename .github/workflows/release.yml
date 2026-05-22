@@ -1,10 +1,9 @@
 name: Release
 
 on:
-  release:
-    types:
-      - published
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -13,32 +12,33 @@ jobs:
   package:
     name: Package integration
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Verify manifest version matches release tag
-        if: github.event_name == 'release'
         run: |
           python - <<'PY'
           import json
           import os
           import sys
 
-          tag = os.environ['GITHUB_REF_NAME'].removeprefix('v')
+          tag = os.environ['RELEASE_TAG'].removeprefix('v')
           version = json.load(open('manifest.json'))['version']
           if version != tag:
               sys.exit(f"manifest.json version {version!r} does not match release tag {tag!r}")
           PY
 
       - name: Set up pnpm
-        if: github.event_name == 'release'
         uses: pnpm/action-setup@v4
         with:
           version: 10
 
       - name: GitHub Release
-        if: github.event_name == 'release'
         run: pnpm dlx changelogithub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,7 +59,6 @@ jobs:
           if-no-files-found: error
 
       - name: Upload release asset
-        if: github.event_name == 'release'
         uses: actions/github-script@v8
         with:
           script: |
@@ -68,8 +67,15 @@ jobs:
 
             const assetPath = 'dist/nature_remo.zip'
             const assetName = path.basename(assetPath)
+            const tag = process.env.RELEASE_TAG
             const { owner, repo } = context.repo
-            const release_id = context.payload.release.id
+
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner,
+              repo,
+              tag,
+            })
+            const release_id = release.id
 
             const { data: assets } = await github.rest.repos.listReleaseAssets({
               owner,
