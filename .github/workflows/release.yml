@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify manifest version matches release tag
+        if: github.event_name == 'release'
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import sys
+
+          tag = os.environ['GITHUB_REF_NAME'].removeprefix('v')
+          version = json.load(open('manifest.json'))['version']
+          if version != tag:
+              sys.exit(f"manifest.json version {version!r} does not match release tag {tag!r}")
+          PY
+
+      - name: Build HACS release zip
+        run: |
+          mkdir -p dist/nature_remo
+          cp __init__.py climate.py config_flow.py echonet.py manifest.json sensor.py dist/nature_remo/
+          cp -R translations dist/nature_remo/translations
+          cd dist/nature_remo
+          zip -r ../nature_remo.zip .
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nature_remo
+          path: dist/nature_remo.zip
+          if-no-files-found: error
+
+      - name: Upload release asset
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/nature_remo.zip

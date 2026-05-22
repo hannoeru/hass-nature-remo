@@ -1,5 +1,8 @@
 {
   "name": "Nature Remo",
   "content_in_root": true,
-  "render_readme": true
+  "zip_release": true,
+  "filename": "nature_remo.zip",
+  "render_readme": true,
+  "homeassistant": "2026.5.3"
 }

@@ -159,12 +159,26 @@ This project uses several development tools to maintain code quality:
   uv run pytest tests/test_specific.py
   ```
 
+### Release Flow
+
+This repository uses GitHub Actions for release safety:
+
+- `CI` runs Ruff, mypy, pytest, HACS validation, and Home Assistant hassfest validation on pushes and pull requests.
+- `Release` runs when a GitHub release is published, verifies the release tag matches `manifest.json`'s `version`, and uploads `nature_remo.zip` as the HACS `zip_release` artifact declared in `hacs.json`.
+
+To publish a release:
+
+1. Update `manifest.json`'s `version`.
+2. Create and publish a matching GitHub release tag, for example `v0.1.0` for version `0.1.0`.
+3. Confirm the release workflow attached `nature_remo.zip` to the release.
+
 ### Project Structure
 
 ```
 hass-nature-remo/
 ├── __init__.py          # Main integration setup
 ├── climate.py           # Climate entity implementation
+├── .github/workflows/   # CI, HACS/hassfest validation, and release packaging
 ├── config_flow.py       # UI setup and YAML import flow
 ├── echonet.py           # ECHONET Lite smart-meter helpers
 ├── sensor.py            # Sensor entities implementation
