@@ -73,7 +73,7 @@ class NatureRemoE(NatureRemoBase, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        appliance = self._coordinator.data["appliances"][self._appliance_id]
+        appliance = self.coordinator.data["appliances"][self._appliance_id]
         smart_meter = appliance["smart_meter"]
         echonetlite_properties = smart_meter["echonetlite_properties"]
         measured_instantaneous = next(
@@ -81,17 +81,6 @@ class NatureRemoE(NatureRemoBase, SensorEntity):
         )
         _LOGGER.debug("Current state: %sW", measured_instantaneous)
         return measured_instantaneous
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
-        self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
 
 
 class NatureRemoCumulativeEnergySensorBase(NatureRemoBase, SensorEntity):
@@ -136,14 +125,14 @@ class NatureRemoCumulativeEnergySensorBase(NatureRemoBase, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        appliance = self._coordinator.data["appliances"][self._appliance_id]
+        appliance = self.coordinator.data["appliances"][self._appliance_id]
         smart_meter = appliance["smart_meter"]
         props = {int(p["epc"]): float(p["val"]) for p in smart_meter["echonetlite_properties"]}
         return self.calculate_energy(props, self._epc)
 
     @property
     def available(self) -> bool:
-        appliance = self._coordinator.data["appliances"][self._appliance_id]
+        appliance = self.coordinator.data["appliances"][self._appliance_id]
         smart_meter = appliance["smart_meter"]
         props = {int(p["epc"]): float(p["val"]) for p in smart_meter["echonetlite_properties"]}
         return self.epc_exists(props, self._epc)
@@ -151,12 +140,6 @@ class NatureRemoCumulativeEnergySensorBase(NatureRemoBase, SensorEntity):
     @cached_property
     def unique_id(self) -> str | None:
         return f"{self._appliance_id}-cumulative-energy-{self._sensor_type.lower()}"
-
-    async def async_added_to_hass(self) -> None:
-        self.async_on_remove(self._coordinator.async_add_listener(self.async_write_ha_state))
-
-    async def async_update(self) -> None:
-        await self._coordinator.async_request_refresh()
 
 
 class NatureRemoEnergySensor(NatureRemoCumulativeEnergySensorBase):
@@ -192,7 +175,7 @@ class NatureRemoTemperatureSensor(NatureRemoDeviceBase, SensorEntity):
     @property
     def native_value(self) -> Optional[float]:
         """Return the state of the sensor."""
-        device = self._coordinator.data["devices"][self._device["id"]]
+        device = self.coordinator.data["devices"][self._device["id"]]
         return device["newest_events"]["te"]["val"]
 
 
@@ -213,7 +196,7 @@ class NatureRemoHumiditySensor(NatureRemoDeviceBase, SensorEntity):
     @property
     def native_value(self) -> Optional[float]:
         """Return the state of the sensor."""
-        device = self._coordinator.data["devices"][self._device["id"]]
+        device = self.coordinator.data["devices"][self._device["id"]]
         return device["newest_events"]["hu"]["val"]
 
 
@@ -234,5 +217,5 @@ class NatureRemoIlluminanceSensor(NatureRemoDeviceBase, SensorEntity):
     @property
     def native_value(self) -> Optional[float]:
         """Return the state of the sensor."""
-        device = self._coordinator.data["devices"][self._device["id"]]
+        device = self.coordinator.data["devices"][self._device["id"]]
         return device["newest_events"]["il"]["val"]

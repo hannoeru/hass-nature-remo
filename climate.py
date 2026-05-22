@@ -230,17 +230,6 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         _LOGGER.debug("Set swing mode: %s", swing_mode)
         await self._post({"air_direction": swing_mode})
 
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
-        self.async_on_remove(self._coordinator.async_add_listener(self._update_callback))
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()
-
     def _update(self, ac_settings: Dict[str, Any], device: Optional[Dict[str, Any]] = None) -> None:
         # hold this to determin the ac mode while it's turned-off
         self._remo_mode = ac_settings["mode"]
@@ -262,10 +251,11 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
             self._current_temperature = float(device["newest_events"]["te"]["val"])
 
     @callback
-    def _update_callback(self) -> None:
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         self._update(
-            self._coordinator.data["appliances"][self._appliance_id]["settings"],
-            self._coordinator.data["devices"][self._device["id"]],
+            self.coordinator.data["appliances"][self._appliance_id]["settings"],
+            self.coordinator.data["devices"][self._device["id"]],
         )
         self.async_write_ha_state()
 
