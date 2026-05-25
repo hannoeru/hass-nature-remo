@@ -42,11 +42,7 @@ jobs:
         run: uv run ruff format --check
 
       - name: Mypy
-        run: |
-          tmpdir="$(mktemp -d)"
-          mkdir -p "$tmpdir/custom_components"
-          ln -s "$PWD" "$tmpdir/custom_components/nature_remo"
-          MYPYPATH="$tmpdir" PYTHONPATH="$tmpdir" uv run mypy -p custom_components.nature_remo
+        run: uv run mypy -p custom_components.nature_remo
 
       - name: Pytest
         run: uv run pytest
@@ -57,13 +53,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Stage integration for hassfest
-        run: |
-          mkdir -p custom_components/nature_remo
-          cp __init__.py climate.py config_flow.py echonet.py manifest.json sensor.py custom_components/nature_remo/
-          cp -R translations custom_components/nature_remo/translations
-          rm __init__.py climate.py config_flow.py echonet.py manifest.json sensor.py
 
       - name: Run hassfest
         uses: home-assistant/actions/hassfest@master

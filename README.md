@@ -20,15 +20,15 @@ Yet another [Home Assistant](https://www.home-assistant.io) component for [Natur
   - [x] Fetch current power usage
   - [x] Fetch cumulative consumed energy
   - [x] Fetch cumulative returned energy (for solar panels, etc.)
-- [ ] Switch
-- [ ] Light
-- [ ] TV
+- [x] Switch
+- [x] Light
+- [x] TV
 - [x] Others
   - [x] Fetch sensor data
 
 Compatibility target: Home Assistant Core 2026.5.3.
-Only energy sensor features (including cumulative consumed and returned energy) have been tested.
-Other device features (e.g. air conditioners, switches) were not verified in this update.
+Only energy sensor features (including cumulative consumed and returned energy) have been tested against real hardware.
+Other device features (e.g. air conditioners, switches, lights, TVs) are unit-tested but not verified against physical devices in this update.
 
 ## Home Assistant Energy Dashboard support
 
@@ -49,8 +49,7 @@ Enter the following information in the dialog and click `Add` button.
 ### Manual Install
 
 1. Download this repository
-1. Create `custom_components/nature_remo` folder in your config directory
-1. Copy files into it (Just drag&drop whole files would be fine)
+1. Copy this repository's `custom_components/nature_remo` directory into your Home Assistant config directory's `custom_components/` directory
 
 ```
 {path_to_your_config}
@@ -61,17 +60,21 @@ Enter the following information in the dialog and click `Add` button.
         ├── climate.py
         ├── config_flow.py
         ├── echonet.py
+        ├── light.py
         ├── manifest.json
+        ├── media_player.py
         ├── sensor.py
+        ├── switch.py
         └── translations/
 ```
 
 ### Install via git submodule
 
-If you have set up git, you can also install this component by adding submodule to your git repository.
+If you have set up git, you can also install this component as a submodule and symlink the integration directory.
 
 ```sh
-git submodule add https://github.com/yutoyazaki/hass-nature-remo.git {path_to_custom_component}/nature_remo
+git submodule add https://github.com/hannoeru/hass-nature-remo.git vendor/hass-nature-remo
+ln -s ../../vendor/hass-nature-remo/custom_components/nature_remo custom_components/nature_remo
 ```
 
 ## Configuration
@@ -142,7 +145,7 @@ This project uses several development tools to maintain code quality:
 
 - **mypy** - Static type checker
   ```bash
-  uv run mypy .
+  uv run mypy -p custom_components.nature_remo
   ```
 
 #### Testing
@@ -164,11 +167,11 @@ This project uses several development tools to maintain code quality:
 This repository uses GitHub Actions for release safety:
 
 - `CI` runs Ruff, mypy, pytest, HACS validation, and Home Assistant hassfest validation on pushes and pull requests.
-- `Release` runs when a `v*` tag is pushed, verifies the tag matches `manifest.json`'s `version`, lets `changelogithub` create/update the GitHub release, and uploads `nature_remo.zip` as the HACS `zip_release` artifact declared in `hacs.json`.
+- `Release` runs when a `v*` tag is pushed, verifies the tag matches `custom_components/nature_remo/manifest.json`'s `version`, lets `changelogithub` create/update the GitHub release, and uploads `nature_remo.zip` as the HACS `zip_release` artifact declared in `hacs.json`.
 
 To publish a release:
 
-1. Update `manifest.json`'s `version`.
+1. Update `custom_components/nature_remo/manifest.json`'s `version`.
 2. Commit and push the version bump.
 3. Create and push a matching tag, for example `v0.1.0` for version `0.1.0`.
 4. Confirm the release workflow created/updated the GitHub release and attached `nature_remo.zip`.
@@ -177,16 +180,23 @@ To publish a release:
 
 ```
 hass-nature-remo/
-├── __init__.py          # Main integration setup
-├── climate.py           # Climate entity implementation
-├── .github/workflows/   # CI, HACS/hassfest validation, and release packaging
-├── config_flow.py       # UI setup and YAML import flow
-├── echonet.py           # ECHONET Lite smart-meter helpers
-├── sensor.py            # Sensor entities implementation
-├── manifest.json        # Home Assistant integration manifest
-├── pyproject.toml       # Project configuration and dependencies
-├── README.md            # This file
-└── tests/               # Test files (if any)
+├── .github/workflows/                 # CI, HACS/hassfest validation, and release packaging
+├── brand/icon.png                     # HACS/Home Assistant brand icon
+├── custom_components/nature_remo/     # HACS integration package
+│   ├── __init__.py                    # Main integration setup
+│   ├── climate.py                     # Climate entity implementation
+│   ├── config_flow.py                 # UI setup and YAML import flow
+│   ├── echonet.py                     # ECHONET Lite smart-meter helpers
+│   ├── light.py                       # Light entity implementation
+│   ├── manifest.json                  # Home Assistant integration manifest
+│   ├── media_player.py                # TV media player entity implementation
+│   ├── sensor.py                      # Sensor entities implementation
+│   ├── switch.py                      # Generic IR switch entity implementation
+│   └── translations/                  # Integration translations
+├── hacs.json                          # HACS metadata
+├── pyproject.toml                     # Project configuration and dependencies
+├── README.md                          # This file
+└── tests/                             # Test files (if any)
 ```
 
 ### Adding New Features
@@ -202,7 +212,7 @@ hass-nature-remo/
    # Run all checks
    uv run ruff check --fix
    uv run ruff format
-   uv run mypy .
+   uv run mypy -p custom_components.nature_remo
    uv run pytest
    ```
 

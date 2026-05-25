@@ -26,7 +26,13 @@ _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://api.nature.global/1"
 
 DOMAIN = "nature_remo"
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
+]
 
 CONF_COOL_TEMP = "cool_temperature"
 CONF_HEAT_TEMP = "heat_temperature"

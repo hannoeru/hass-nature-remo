@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-TRANSLATIONS = Path(__file__).parents[1] / "translations"
+TRANSLATIONS = Path(__file__).parents[1] / "custom_components" / "nature_remo" / "translations"
 REQUIRED_TRANSLATIONS = {"en.json", "ja.json", "zh-Hant.json"}
 
 
