@@ -8,5 +8,5 @@
   "documentation": "https://github.com/hannoeru/hass-nature-remo",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/hannoeru/hass-nature-remo/issues",
-  "version": "0.6.2"
+  "version": "0.6.3"
 }
