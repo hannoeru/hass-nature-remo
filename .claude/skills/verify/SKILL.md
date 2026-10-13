@@ -70,7 +70,7 @@ Run only the harness while iterating:
 uv run pytest tests/harness
 ```
 
-The coordinator's 60 second update interval is still scheduled after unload, so the harness allows lingering timers. Do not copy that marker onto tests that should prove a timer was cancelled.
+Unloading the config entry shuts the coordinator down, so the harness does not allow lingering timers.
 
 To cover a new API response, add or override the payload, register it on `aioclient_mock` before setup, and assert the Home Assistant state a user would see. Prefer that over constructing entity classes directly when the bug is in setup, discovery, or config flow.
 

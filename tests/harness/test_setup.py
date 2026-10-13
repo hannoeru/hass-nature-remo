@@ -2,7 +2,6 @@
 
 from http import HTTPStatus
 
-import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, State
@@ -11,9 +10,6 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry, mock_r
 
 from custom_components.nature_remo import CONF_COOL_TEMP, CONF_HEAT_TEMP, DOMAIN
 from tests.harness.payloads import APPLIANCES_URL, DEVICES_URL, sample_appliances_and_devices
-
-# The coordinator keeps its update interval scheduled after unload.
-pytestmark = pytest.mark.parametrize("expected_lingering_timers", [True])
 
 
 def _entry_data() -> dict[str, object]:
@@ -68,7 +64,9 @@ async def test_config_entry_creates_user_visible_entities(
     assert appliance_calls
     assert appliance_calls[0][3]["Authorization"] == "Bearer test-token"
 
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     assert await hass.config_entries.async_unload(entry.entry_id)
+    assert coordinator._shutdown_requested is True
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
     climate_after = hass.states.get("climate.living_room_nature_remo_living_ac")
