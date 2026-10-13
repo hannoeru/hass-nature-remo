@@ -9,6 +9,15 @@
           "cool_temperature": "Default cooling temperature",
           "heat_temperature": "Default heating temperature"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Nature Remo",
+        "description": "The access token was rejected. Enter a new token.",
+        "data": {
+          "access_token": "Access token",
+          "cool_temperature": "Default cooling temperature",
+          "heat_temperature": "Default heating temperature"
+        }
       }
     },
     "error": {
@@ -16,7 +25,8 @@
       "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "Nature Remo is already configured"
+      "already_configured": "Nature Remo is already configured",
+      "reauth_successful": "Reauthentication was successful"
     }
   }
 }

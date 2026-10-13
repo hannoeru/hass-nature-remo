@@ -11,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -82,6 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="Nature Remo update",
         update_method=api.get,
         update_interval=DEFAULT_UPDATE_INTERVAL,
@@ -122,6 +123,8 @@ class NatureRemoAPI:
         try:
             appliances_response = await self._request_json("GET", "/appliances")
             devices_response = await self._request_json("GET", "/devices")
+        except ConfigEntryAuthFailed:
+            raise
         except HomeAssistantError as err:
             raise UpdateFailed(f"Error communicating with Nature Remo API: {err}") from err
 
@@ -154,6 +157,8 @@ class NatureRemoAPI:
                     response.raise_for_status()
                     return await response.json()
             except ClientError as err:
+                if isinstance(err, ClientResponseError) and err.status == 401:
+                    raise ConfigEntryAuthFailed("Nature Remo rejected the access token") from err
                 if attempt + 1 >= attempts or not _retryable_get_error(err):
                     raise HomeAssistantError(f"{method} {path} failed: {err}") from err
                 delay = _GET_RETRY_DELAYS[attempt]
