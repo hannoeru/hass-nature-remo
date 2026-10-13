@@ -59,7 +59,7 @@ The tests then:
 
 1. Create a config entry with an access token and the default cool/heat temperatures, the same data the settings UI stores.
 2. Wait for the first coordinator refresh.
-3. Assert the climate, power, energy, switch, light, media player, and room sensor entities exist and carry the mocked values. Home Assistant builds the entity id from the device name and the entity name, for example `climate.living_room_nature_remo_living_ac`. Assert the id Home Assistant registered. Numeric sensor states are strings such as `450.0`. The climate entity's current temperature stays unknown until a later coordinator refresh, so the harness does not assert it.
+3. Assert the climate, power, energy, switch, light, media player, and room sensor entities exist and carry the mocked values. Home Assistant builds the entity id from the device name and the entity name, for example `climate.living_room_nature_remo_living_ac`. Assert the id Home Assistant registered. Numeric sensor states are strings such as `450.0`. The climate entity's current temperature comes from the Remo device on the air-conditioner payload, so the harness asserts it at setup.
 4. Assert the request used `Authorization: Bearer <token>`.
 5. Unload the config entry and assert it is no longer loaded. Home Assistant may leave the entity id in the state machine as `unavailable`.
 6. Walk the user config flow for a valid token and for an HTTP 401.
