@@ -2,7 +2,10 @@
 
 from typing import Any
 
+from homeassistant.components.sensor.const import SensorStateClass
+
 from custom_components.nature_remo.sensor import (
+    NatureRemoE,
     NatureRemoEnergySensor,
     NatureRemoHumiditySensor,
     NatureRemoIlluminanceSensor,
@@ -16,6 +19,17 @@ class FakeCoordinator:
     def __init__(self, data: dict[str, Any]) -> None:
         self.data = data
         self.last_update_success = True
+
+
+def test_power_sensor_is_a_measurement() -> None:
+    appliance = {
+        "id": "appliance-1",
+        "nickname": "Meter",
+        "device": {"id": "device-1", "name": "Remo E"},
+    }
+    sensor = NatureRemoE(FakeCoordinator({"appliances": {}}), appliance)  # type: ignore[arg-type]
+
+    assert sensor.state_class is SensorStateClass.MEASUREMENT
 
 
 def test_device_sensor_unique_ids_are_sensor_specific() -> None:
