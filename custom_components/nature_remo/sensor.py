@@ -47,10 +47,7 @@ async def async_setup_entry(
             if has_epc(properties, EPC_CUMULATIVE_RETURNED_ENERGY):
                 entities.append(NatureRemoReturnedEnergySensor(coordinator, appliance))
     for device in devices.values():
-        # skip devices that include in appliances
-        if device["id"] in [appliance["device"]["id"] for appliance in appliances.values()]:
-            continue
-        for sensor in device["newest_events"]:
+        for sensor in device.get("newest_events") or {}:
             if sensor == "te":
                 entities.append(NatureRemoTemperatureSensor(coordinator, device))
             elif sensor == "hu":
