@@ -1,7 +1,7 @@
 """Tests for the Nature Remo API adapter."""
 
 import asyncio
-from typing import Any
+from typing import Any, Self
 
 import pytest
 from aiohttp import ClientError
@@ -17,10 +17,10 @@ class FakeResponse:
         self._payload = payload
         self.raise_for_status_called = False
 
-    async def __aenter__(self) -> "FakeResponse":
+    async def __aenter__(self) -> Self:
         return self
 
-    async def __aexit__(self, *_args: Any) -> None:
+    async def __aexit__(self, *_args: object) -> None:
         return None
 
     def raise_for_status(self) -> None:

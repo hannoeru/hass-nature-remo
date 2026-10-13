@@ -51,7 +51,7 @@ For Nature Remo E and E Lite:
 
 ## Compatibility and testing status
 
-- Compatibility target: **Home Assistant Core 2026.5.3**
+- Compatibility target: **Home Assistant Core 2026.10.1**
 - Energy sensor features, including cumulative consumed and returned energy, have been tested against real hardware
 - Air conditioner, switch, light, and TV entities are unit-tested but were not verified against physical devices in this update
 

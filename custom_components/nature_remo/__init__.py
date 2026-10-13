@@ -2,7 +2,7 @@
 
 import logging
 from datetime import timedelta
-from typing import Any, Dict
+from typing import Any
 
 import voluptuous as vol
 from aiohttp import ClientError, ClientSession
@@ -112,7 +112,7 @@ class NatureRemoAPI:
         self._access_token = access_token
         self._session = session
 
-    async def get(self) -> Dict[str, Dict[str, Any]]:
+    async def get(self) -> dict[str, dict[str, Any]]:
         """Get appliance and device list."""
         _LOGGER.debug("Trying to fetch appliance and device list from API.")
         try:
@@ -125,7 +125,7 @@ class NatureRemoAPI:
         devices = {x["id"]: x for x in devices_response}
         return {"appliances": appliances, "devices": devices}
 
-    async def post(self, path: str, data: Dict[str, Any]) -> Any:
+    async def post(self, path: str, data: dict[str, Any]) -> Any:
         """Post any request."""
         _LOGGER.debug("Trying to request post:%s, data:%s", path, data)
         return await self._request_json("POST", path, data=data)
@@ -149,7 +149,7 @@ class NatureRemoAPI:
 class NatureRemoBase(CoordinatorEntity):
     """Nature Remo entity base class."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, appliance: Dict[str, Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, appliance: dict[str, Any]) -> None:
         super().__init__(coordinator)
         self._name = f"Nature Remo {appliance['nickname']}"
         self._appliance_id = appliance["id"]
@@ -185,7 +185,7 @@ class NatureRemoBase(CoordinatorEntity):
 class NatureRemoDeviceBase(CoordinatorEntity):
     """Nature Remo Device entity base class."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device: Dict[str, Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, device: dict[str, Any]) -> None:
         super().__init__(coordinator)
         self._name = f"Nature Remo {device['name']}"
         self._device = device

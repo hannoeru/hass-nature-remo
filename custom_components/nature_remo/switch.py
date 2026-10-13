@@ -1,7 +1,8 @@
 """Support for Nature Remo IR switches."""
 
 import logging
-from typing import Any, Dict, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -39,7 +40,7 @@ async def async_setup_entry(
     )
 
 
-def _has_switch_signal(signals: Iterable[Dict[str, Any]]) -> bool:
+def _has_switch_signal(signals: Iterable[dict[str, Any]]) -> bool:
     """Return true if the signal list can act as a switch."""
     images = {signal.get("image") for signal in signals}
     return bool(images & {SIGNAL_IMAGE_ON, SIGNAL_IMAGE_OFF, SIGNAL_IMAGE_TOGGLE})
@@ -54,7 +55,7 @@ class NatureRemoSwitch(NatureRemoBase, SwitchEntity):
         self,
         coordinator: DataUpdateCoordinator,
         api: NatureRemoAPI,
-        appliance: Dict[str, Any],
+        appliance: dict[str, Any],
     ) -> None:
         super().__init__(coordinator, appliance)
         self._api = api

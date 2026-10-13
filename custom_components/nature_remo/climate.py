@@ -1,7 +1,7 @@
 """Support for Nature Remo AC."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
@@ -72,8 +72,8 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         self,
         coordinator: DataUpdateCoordinator,
         api: NatureRemoAPI,
-        appliance: Dict[str, Any],
-        config: Dict[str, Any],
+        appliance: dict[str, Any],
+        config: dict[str, Any],
     ) -> None:
         super().__init__(coordinator, appliance)
         self._api: NatureRemoAPI = api
@@ -97,7 +97,7 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         return SUPPORT_FLAGS
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._current_temperature
 
@@ -123,7 +123,7 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         return max(temp_range)
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         _LOGGER.debug("Current target temperature: %s", self._target_temperature)
         return self._target_temperature
@@ -140,40 +140,40 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         return 1
 
     @property
-    def hvac_mode(self) -> Optional[HVACMode]:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         return self._hvac_mode
 
     @cached_property
-    def hvac_modes(self) -> List[HVACMode]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         remo_modes = list(self._modes.keys())
-        ha_modes = list(map(lambda mode: MODE_REMO_TO_HA[mode], remo_modes))
+        ha_modes = [MODE_REMO_TO_HA[mode] for mode in remo_modes]
         ha_modes.append(HVACMode.OFF)
         return ha_modes
 
     @property
-    def fan_mode(self) -> Optional[str]:
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return self._fan_mode
 
     @property
-    def fan_modes(self) -> List[str]:
+    def fan_modes(self) -> list[str]:
         """List of available fan modes."""
         return self._modes[self._remo_mode]["vol"]
 
     @property
-    def swing_mode(self) -> Optional[str]:
+    def swing_mode(self) -> str | None:
         """Return the swing setting."""
         return self._swing_mode
 
     @property
-    def swing_modes(self) -> List[str]:
+    def swing_modes(self) -> list[str]:
         """List of available swing modes."""
         return self._modes[self._remo_mode]["dir"]
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
             "previous_target_temperature": self._last_target_temperature,
@@ -227,7 +227,7 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         _LOGGER.debug("Set swing mode: %s", swing_mode)
         await self._post({"air_direction": swing_mode})
 
-    def _update(self, ac_settings: Dict[str, Any], device: Optional[Dict[str, Any]] = None) -> None:
+    def _update(self, ac_settings: dict[str, Any], device: dict[str, Any] | None = None) -> None:
         # hold this to determin the ac mode while it's turned-off
         self._remo_mode = ac_settings["mode"]
         try:
@@ -259,11 +259,11 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         )
         self.async_write_ha_state()
 
-    async def _post(self, data: Dict[str, Any]) -> None:
+    async def _post(self, data: dict[str, Any]) -> None:
         response = await self._api.post(f"/appliances/{self._appliance_id}/aircon_settings", data)
         self._update(response)
         self.async_write_ha_state()
 
-    def _current_mode_temp_range(self) -> List[float]:
+    def _current_mode_temp_range(self) -> list[float]:
         temp_range = self._modes[self._remo_mode]["temp"]
         return list(map(float, filter(None, temp_range)))  # type: ignore[arg-type]

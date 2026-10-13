@@ -1,7 +1,7 @@
 """Support for Nature Remo TVs."""
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -57,7 +57,7 @@ class NatureRemoTV(NatureRemoBase, MediaPlayerEntity):
         self,
         coordinator: DataUpdateCoordinator,
         api: NatureRemoAPI,
-        appliance: Dict[str, Any],
+        appliance: dict[str, Any],
     ) -> None:
         super().__init__(coordinator, appliance)
         self._api = api
@@ -173,7 +173,7 @@ class NatureRemoTV(NatureRemoBase, MediaPlayerEntity):
         response = await self._api.post(f"/appliances/{self._appliance_id}/tv", {"button": button})
         self._update(response, self._buttons)
 
-    def _update(self, state: Dict[str, Any] | None, buttons: list[str]) -> None:
+    def _update(self, state: dict[str, Any] | None, buttons: list[str]) -> None:
         """Update local state from Nature Remo TV state and buttons."""
         self._source_list = [
             INPUT_TO_SOURCE.get(button.removeprefix("input-"), button.removeprefix("input-"))
@@ -195,7 +195,7 @@ class NatureRemoTV(NatureRemoBase, MediaPlayerEntity):
             self.async_write_ha_state()
 
 
-def _button_names(appliance: Dict[str, Any]) -> list[str]:
+def _button_names(appliance: dict[str, Any]) -> list[str]:
     """Return all supported Nature Remo button names for a TV appliance."""
     return [button["name"] for button in (appliance.get("tv") or {}).get("buttons") or []]
 
