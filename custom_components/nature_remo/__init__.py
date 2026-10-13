@@ -1,11 +1,12 @@
 """The Nature Remo integration."""
 
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Any
 
 import voluptuous as vol
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientError, ClientResponseError, ClientSession
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -39,6 +40,8 @@ CONF_HEAT_TEMP = "heat_temperature"
 DEFAULT_COOL_TEMP = 28
 DEFAULT_HEAT_TEMP = 20
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=60)
+_GET_ATTEMPTS = 3
+_GET_RETRY_DELAYS = (0.5, 1.0)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -131,19 +134,44 @@ class NatureRemoAPI:
         return await self._request_json("POST", path, data=data)
 
     async def _request_json(self, method: str, path: str, **kwargs: Any) -> Any:
-        """Request JSON from the Nature Remo API."""
+        """Request JSON from the Nature Remo API.
+
+        GET polls are retried on a dropped connection, HTTP 429, or HTTP 5xx.
+        POST is not retried: an IR or air-conditioner command may already have
+        been accepted when the response is lost.
+        """
         headers = {"Authorization": f"Bearer {self._access_token}"}
-        try:
-            async with self._session.request(
-                method,
-                f"{_RESOURCE}{path}",
-                headers=headers,
-                **kwargs,
-            ) as response:
-                response.raise_for_status()
-                return await response.json()
-        except ClientError as err:
-            raise HomeAssistantError(f"{method} {path} failed: {err}") from err
+        attempts = _GET_ATTEMPTS if method == "GET" else 1
+        for attempt in range(attempts):
+            try:
+                async with self._session.request(
+                    method,
+                    f"{_RESOURCE}{path}",
+                    headers=headers,
+                    **kwargs,
+                ) as response:
+                    response.raise_for_status()
+                    return await response.json()
+            except ClientError as err:
+                if attempt + 1 >= attempts or not _retryable_get_error(err):
+                    raise HomeAssistantError(f"{method} {path} failed: {err}") from err
+                delay = _GET_RETRY_DELAYS[attempt]
+                _LOGGER.debug(
+                    "Retrying Nature Remo %s %s in %ss after %s",
+                    method,
+                    path,
+                    delay,
+                    err,
+                )
+                await asyncio.sleep(delay)
+        raise HomeAssistantError(f"{method} {path} failed")
+
+
+def _retryable_get_error(err: ClientError) -> bool:
+    """Return true when a GET failure is worth another attempt."""
+    if isinstance(err, ClientResponseError):
+        return err.status == 429 or err.status >= 500
+    return True
 
 
 class NatureRemoBase(CoordinatorEntity):
