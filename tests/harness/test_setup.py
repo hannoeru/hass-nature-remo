@@ -5,9 +5,9 @@ from http import HTTPStatus
 import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import MockConfigEntry, mock_restore_cache
 
 from custom_components.nature_remo import CONF_COOL_TEMP, CONF_HEAT_TEMP, DOMAIN
 from tests.harness.payloads import APPLIANCES_URL, DEVICES_URL, sample_appliances_and_devices
@@ -73,6 +73,19 @@ async def test_config_entry_creates_user_visible_entities(
     assert entry.state is ConfigEntryState.NOT_LOADED
     climate_after = hass.states.get("climate.living_room_nature_remo_living_ac")
     assert climate_after is None or climate_after.state == "unavailable"
+
+
+async def test_switch_restores_the_assumed_on_state(hass: HomeAssistant, aioclient_mock) -> None:
+    """An IR switch comes back on when that is what Home Assistant stored."""
+    _mock_cloud(aioclient_mock)
+    mock_restore_cache(hass, [State("switch.living_room_nature_remo_fan", "on")])
+    entry = MockConfigEntry(domain=DOMAIN, data=_entry_data(), unique_id=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert _state(hass, "switch.living_room_nature_remo_fan") == "on"
 
 
 async def test_user_flow_accepts_a_working_token(hass: HomeAssistant, aioclient_mock) -> None:
