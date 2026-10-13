@@ -1,7 +1,8 @@
 """Support for Nature Remo lights."""
 
 import logging
-from typing import Any, Dict, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -47,14 +48,13 @@ class NatureRemoLight(NatureRemoBase, LightEntity):
     """Representation of a Nature Remo light appliance."""
 
     _attr_assumed_state = True
-    _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_color_mode = ColorMode.ONOFF
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         api: NatureRemoAPI,
-        appliance: Dict[str, Any],
+        appliance: dict[str, Any],
     ) -> None:
         super().__init__(coordinator, appliance)
         self._api = api
@@ -74,7 +74,7 @@ class NatureRemoLight(NatureRemoBase, LightEntity):
         return {ColorMode.ONOFF}
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return Nature Remo-specific light state."""
         attributes: dict[str, Any] = {ATTR_BUTTONS: self._buttons}
         if brightness := self._state.get("brightness"):
@@ -112,7 +112,7 @@ class NatureRemoLight(NatureRemoBase, LightEntity):
         self._update(response)
         self._async_write_state_if_added()
 
-    def _update(self, state: Dict[str, Any] | None) -> None:
+    def _update(self, state: dict[str, Any] | None) -> None:
         """Update local state from Nature Remo light state."""
         if not state:
             return
@@ -129,6 +129,6 @@ class NatureRemoLight(NatureRemoBase, LightEntity):
             self.async_write_ha_state()
 
 
-def _button_names(appliance: Dict[str, Any]) -> list[str]:
+def _button_names(appliance: dict[str, Any]) -> list[str]:
     """Return all supported Nature Remo button names for a light appliance."""
     return [button["name"] for button in (appliance.get("light") or {}).get("buttons") or []]

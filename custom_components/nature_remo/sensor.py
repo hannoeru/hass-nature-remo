@@ -1,12 +1,12 @@
 """Support for Nature Remo E energy sensor."""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfEnergy, UnitOfPower, UnitOfTemperature
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfEnergy, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -50,7 +50,7 @@ async def async_setup_entry(
         # skip devices that include in appliances
         if device["id"] in [appliance["device"]["id"] for appliance in appliances.values()]:
             continue
-        for sensor in device["newest_events"].keys():
+        for sensor in device["newest_events"]:
             if sensor == "te":
                 entities.append(NatureRemoTemperatureSensor(coordinator, device))
             elif sensor == "hu":
@@ -61,7 +61,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def _smart_meter_properties(appliance: Dict[str, Any]) -> dict[int, float]:
+def _smart_meter_properties(appliance: dict[str, Any]) -> dict[int, float]:
     """Return parsed ECHONET Lite properties for a smart meter appliance."""
     return parse_echonet_properties(appliance["smart_meter"]["echonetlite_properties"])
 
@@ -69,7 +69,7 @@ def _smart_meter_properties(appliance: Dict[str, Any]) -> dict[int, float]:
 class NatureRemoE(NatureRemoBase, SensorEntity):
     """Implementation of a Nature Remo E sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, appliance: Dict[str, Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, appliance: dict[str, Any]) -> None:
         super().__init__(coordinator, appliance)
         self._name = self._name.strip() + " Power"
         self.entity_description = SensorEntityDescription(
@@ -96,7 +96,7 @@ class NatureRemoCumulativeEnergySensorBase(NatureRemoBase, SensorEntity):
     _epc: int
     _sensor_type: str
 
-    def __init__(self, coordinator: DataUpdateCoordinator, appliance: Dict[str, Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, appliance: dict[str, Any]) -> None:
         super().__init__(coordinator, appliance)
         self._name = self._name.strip() + f" Energy ({self._sensor_type})"
         self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
@@ -129,7 +129,7 @@ class NatureRemoEnergySensor(NatureRemoCumulativeEnergySensorBase):
     _epc = 224
     _sensor_type = "Consumed"
 
-    def __init__(self, coordinator: DataUpdateCoordinator, appliance: Dict[str, Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, appliance: dict[str, Any]) -> None:
         super().__init__(coordinator, appliance)
 
 
@@ -137,14 +137,14 @@ class NatureRemoReturnedEnergySensor(NatureRemoCumulativeEnergySensorBase):
     _epc = 227
     _sensor_type = "Returned"
 
-    def __init__(self, coordinator: DataUpdateCoordinator, appliance: Dict[str, Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, appliance: dict[str, Any]) -> None:
         super().__init__(coordinator, appliance)
 
 
 class NatureRemoTemperatureSensor(NatureRemoDeviceBase, SensorEntity):
     """Implementation of a Nature Remo sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device: Dict[str, Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, device: dict[str, Any]) -> None:
         super().__init__(coordinator, device)
         self._name = self._name.strip() + " Temperature"
         self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
@@ -156,7 +156,7 @@ class NatureRemoTemperatureSensor(NatureRemoDeviceBase, SensorEntity):
         return self._device["id"] + "-temperature"
 
     @property
-    def native_value(self) -> Optional[float]:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         device = self.coordinator.data["devices"][self._device["id"]]
         return device["newest_events"]["te"]["val"]
@@ -165,7 +165,7 @@ class NatureRemoTemperatureSensor(NatureRemoDeviceBase, SensorEntity):
 class NatureRemoHumiditySensor(NatureRemoDeviceBase, SensorEntity):
     """Implementation of a Nature Remo sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device: Dict[str, Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, device: dict[str, Any]) -> None:
         super().__init__(coordinator, device)
         self._name = self._name.strip() + " Humidity"
         self._attr_native_unit_of_measurement = PERCENTAGE
@@ -177,7 +177,7 @@ class NatureRemoHumiditySensor(NatureRemoDeviceBase, SensorEntity):
         return self._device["id"] + "-humidity"
 
     @property
-    def native_value(self) -> Optional[float]:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         device = self.coordinator.data["devices"][self._device["id"]]
         return device["newest_events"]["hu"]["val"]
@@ -186,7 +186,7 @@ class NatureRemoHumiditySensor(NatureRemoDeviceBase, SensorEntity):
 class NatureRemoIlluminanceSensor(NatureRemoDeviceBase, SensorEntity):
     """Implementation of a Nature Remo sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device: Dict[str, Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, device: dict[str, Any]) -> None:
         super().__init__(coordinator, device)
         self._name = self._name.strip() + " Illuminance"
         self._attr_native_unit_of_measurement = LIGHT_LUX
@@ -198,7 +198,7 @@ class NatureRemoIlluminanceSensor(NatureRemoDeviceBase, SensorEntity):
         return self._device["id"] + "-illuminance"
 
     @property
-    def native_value(self) -> Optional[float]:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         device = self.coordinator.data["devices"][self._device["id"]]
         return device["newest_events"]["il"]["val"]

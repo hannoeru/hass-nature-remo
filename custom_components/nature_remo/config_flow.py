@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -61,17 +61,17 @@ class NatureRemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await api.get()
         except UpdateFailed:
             return {"base": "cannot_connect"}
-        except Exception:
+        except Exception:  # noqa: BLE001 - unknown failures stay on the form
             return {"base": "unknown"}
         return {}
 
-    def _schema(self, user_input: dict[str, Any] | None = None) -> vol.Schema:
+    def _schema(self, user_input: dict[str, Any] | None = None) -> probatio.Schema:
         """Return the config flow schema."""
         user_input = user_input or {}
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_ACCESS_TOKEN): str,
-                vol.Optional(
+                probatio.Required(CONF_ACCESS_TOKEN): str,
+                probatio.Optional(
                     CONF_COOL_TEMP,
                     default=user_input.get(CONF_COOL_TEMP, DEFAULT_COOL_TEMP),
                 ): NumberSelector(
@@ -81,7 +81,7 @@ class NatureRemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         mode=NumberSelectorMode.BOX,
                     )
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_HEAT_TEMP,
                     default=user_input.get(CONF_HEAT_TEMP, DEFAULT_HEAT_TEMP),
                 ): NumberSelector(

@@ -26,7 +26,7 @@ Requires Python 3.14.2 or newer and [uv](https://docs.astral.sh/uv/).
 uv sync --dev
 ```
 
-This installs Home Assistant, the integration's runtime dependencies, and `pytest-homeassistant-custom-component` from the dev group in `pyproject.toml`. That plugin is pinned to the release that tracks the Home Assistant version in `hacs.json` (currently 2026.5.3, plugin 0.13.332). Move the pin and Home Assistant together; a newer plugin requires a newer Home Assistant.
+This installs Home Assistant, the integration's runtime dependencies, and `pytest-homeassistant-custom-component` from the dev group in `pyproject.toml`. That plugin is pinned to the release that tracks the Home Assistant version in `hacs.json` (currently 2026.10.1, plugin 0.13.372). Move the pin and Home Assistant together; a newer plugin requires a newer Home Assistant. pytest stays at 9.0.3 because that plugin release requires it.
 
 ## 2. Lint and type-check
 

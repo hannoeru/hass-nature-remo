@@ -58,7 +58,7 @@ def test_climate_update_uses_device_temperature_when_present() -> None:
         {CONF_COOL_TEMP: 28, CONF_HEAT_TEMP: 20},
     )
 
-    entity._update(  # noqa: SLF001
+    entity._update(
         _appliance()["settings"],
         {"newest_events": {"te": {"val": 23.5}}},
     )
@@ -73,9 +73,9 @@ def test_climate_update_handles_missing_device_temperature() -> None:
         _appliance(),
         {CONF_COOL_TEMP: 28, CONF_HEAT_TEMP: 20},
     )
-    entity._current_temperature = 23.5  # noqa: SLF001
+    entity._current_temperature = 23.5
 
-    entity._update(  # noqa: SLF001
+    entity._update(
         _appliance()["settings"],
         {"newest_events": {}},
     )
