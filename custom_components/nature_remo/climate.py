@@ -253,10 +253,12 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update(
-            self.coordinator.data["appliances"][self._appliance_id]["settings"],
-            self.coordinator.data["devices"][self._device["id"]],
-        )
+        appliance = (self.coordinator.data.get("appliances") or {}).get(self._appliance_id)
+        if appliance is None:
+            self.async_write_ha_state()
+            return
+        device = (self.coordinator.data.get("devices") or {}).get(self._device["id"])
+        self._update(appliance["settings"], device)
         self.async_write_ha_state()
 
     async def _post(self, data: dict[str, Any]) -> None:

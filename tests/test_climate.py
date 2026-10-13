@@ -16,6 +16,7 @@ class FakeCoordinator:
 
     def __init__(self, data: dict[str, Any] | None = None) -> None:
         self.data = data or {}
+        self.last_update_success = True
 
 
 class FakeApi:
@@ -85,6 +86,28 @@ def test_climate_update_handles_missing_device_temperature() -> None:
 
     assert entity.current_temperature is None
     assert entity.hvac_mode == HVACMode.COOL
+
+
+def test_climate_unavailable_when_appliance_disappears() -> None:
+    appliance = _appliance()
+    coordinator = FakeCoordinator(
+        {
+            "appliances": {"appliance-1": appliance},
+            "devices": {"device-1": appliance["device"]},
+        }
+    )
+    entity = NatureRemoAC(
+        coordinator,  # type: ignore[arg-type]
+        FakeApi(),  # type: ignore[arg-type]
+        appliance,
+        {CONF_COOL_TEMP: 28, CONF_HEAT_TEMP: 20},
+    )
+    entity.async_write_ha_state = lambda: None  # type: ignore[method-assign]
+    coordinator.data = {"appliances": {}, "devices": {}}
+
+    entity._handle_coordinator_update()
+
+    assert entity.available is False
 
 
 def test_climate_reads_room_temperature_when_created() -> None:

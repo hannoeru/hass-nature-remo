@@ -212,6 +212,13 @@ class NatureRemoBase(CoordinatorEntity):
         """Return the polling requirement of the entity."""
         return False
 
+    @property
+    def available(self) -> bool:
+        """Return whether the appliance is still present in the latest poll."""
+        return super().available and self._appliance_id in (
+            self.coordinator.data.get("appliances") or {}
+        )
+
     @cached_property
     def device_info(self) -> DeviceInfo | None:
         """Return the device info for the sensor."""
@@ -240,6 +247,13 @@ class NatureRemoDeviceBase(CoordinatorEntity):
     def should_poll(self) -> bool:
         """Return the polling requirement of the entity."""
         return False
+
+    @property
+    def available(self) -> bool:
+        """Return whether the device is still present in the latest poll."""
+        return super().available and self._device["id"] in (
+            self.coordinator.data.get("devices") or {}
+        )
 
     @cached_property
     def device_info(self) -> DeviceInfo | None:

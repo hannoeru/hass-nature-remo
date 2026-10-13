@@ -63,6 +63,25 @@ def _smart_meter_properties(appliance: dict[str, Any]) -> dict[int, float]:
     return parse_echonet_properties(appliance["smart_meter"]["echonetlite_properties"])
 
 
+def _appliance_or_none(entity: NatureRemoBase) -> dict[str, Any] | None:
+    """Return the appliance payload, or None when this poll no longer includes it."""
+    appliance = (entity.coordinator.data.get("appliances") or {}).get(entity._appliance_id)
+    if isinstance(appliance, dict):
+        return appliance
+    return None
+
+
+def _device_event_value(entity: NatureRemoDeviceBase, event: str) -> float | None:
+    """Return one newest-event value, or None when the device or event is gone."""
+    device = (entity.coordinator.data.get("devices") or {}).get(entity._device["id"])
+    if not isinstance(device, dict):
+        return None
+    try:
+        return device["newest_events"][event]["val"]
+    except KeyError, TypeError:
+        return None
+
+
 class NatureRemoE(NatureRemoBase, SensorEntity):
     """Implementation of a Nature Remo E sensor."""
 
@@ -80,7 +99,9 @@ class NatureRemoE(NatureRemoBase, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        appliance = self.coordinator.data["appliances"][self._appliance_id]
+        appliance = _appliance_or_none(self)
+        if appliance is None:
+            return None
         measured_instantaneous = _smart_meter_properties(appliance).get(
             EPC_MEASURED_INSTANTANEOUS_POWER
         )
@@ -103,7 +124,9 @@ class NatureRemoCumulativeEnergySensorBase(NatureRemoBase, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        appliance = self.coordinator.data["appliances"][self._appliance_id]
+        appliance = _appliance_or_none(self)
+        if appliance is None:
+            return None
         try:
             return calculate_cumulative_energy(_smart_meter_properties(appliance), self._epc)
         except (KeyError, TypeError, ValueError) as err:
@@ -114,7 +137,9 @@ class NatureRemoCumulativeEnergySensorBase(NatureRemoBase, SensorEntity):
     def available(self) -> bool:
         if not super().available:
             return False
-        appliance = self.coordinator.data["appliances"][self._appliance_id]
+        appliance = _appliance_or_none(self)
+        if appliance is None:
+            return False
         try:
             return has_epc(_smart_meter_properties(appliance), self._epc)
         except KeyError, TypeError, ValueError:
@@ -158,8 +183,7 @@ class NatureRemoTemperatureSensor(NatureRemoDeviceBase, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        device = self.coordinator.data["devices"][self._device["id"]]
-        return device["newest_events"]["te"]["val"]
+        return _device_event_value(self, "te")
 
 
 class NatureRemoHumiditySensor(NatureRemoDeviceBase, SensorEntity):
@@ -179,8 +203,7 @@ class NatureRemoHumiditySensor(NatureRemoDeviceBase, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        device = self.coordinator.data["devices"][self._device["id"]]
-        return device["newest_events"]["hu"]["val"]
+        return _device_event_value(self, "hu")
 
 
 class NatureRemoIlluminanceSensor(NatureRemoDeviceBase, SensorEntity):
@@ -200,5 +223,4 @@ class NatureRemoIlluminanceSensor(NatureRemoDeviceBase, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        device = self.coordinator.data["devices"][self._device["id"]]
-        return device["newest_events"]["il"]["val"]
+        return _device_event_value(self, "il")

@@ -51,6 +51,22 @@ def test_device_info_separates_model_and_serial() -> None:
     assert bare_info["sw_version"] == "Unknown Version"
 
 
+def test_temperature_sensor_unavailable_when_device_disappears() -> None:
+    device = {
+        "id": "device-1",
+        "name": "Living Room",
+        "newest_events": {"te": {"val": 21.5}},
+    }
+    coordinator = FakeCoordinator({"devices": {"device-1": device}})
+    sensor = NatureRemoTemperatureSensor(coordinator, device)  # type: ignore[arg-type]
+
+    assert sensor.available is True
+    coordinator.data = {"devices": {}}
+
+    assert sensor.available is False
+    assert sensor.native_value is None
+
+
 def test_power_sensor_is_a_measurement() -> None:
     appliance = {
         "id": "appliance-1",
