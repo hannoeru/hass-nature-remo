@@ -48,6 +48,9 @@ async def test_config_entry_creates_user_visible_entities(
     await hass.async_block_till_done()
 
     assert _state(hass, "climate.living_room_nature_remo_living_ac") == "cool"
+    climate = hass.states.get("climate.living_room_nature_remo_living_ac")
+    assert climate is not None
+    assert climate.attributes["current_temperature"] == 24.0
     assert _state(hass, "sensor.meter_nature_remo_meter_power") == "450.0"
     assert _state(hass, "sensor.meter_nature_remo_meter_energy_consumed") == "100.0"
     assert _state(hass, "switch.living_room_nature_remo_fan") == "off"

@@ -89,7 +89,7 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         self._fan_mode: str | None = None
         self._swing_mode: str | None = None
         self._last_target_temperature: dict[str, float | None] = {v: None for v in MODE_REMO_TO_HA}
-        self._update(appliance["settings"])
+        self._update(appliance["settings"], appliance.get("device"))
 
     @cached_property
     def supported_features(self) -> ClimateEntityFeature:
@@ -199,7 +199,7 @@ class NatureRemoAC(NatureRemoBase, ClimateEntity):
         if target_temp.is_integer():
             # has to cast to whole number otherwise API will return an error
             target_temp = int(target_temp)
-        _LOGGER.debug("Set temperature: %d", target_temp)
+        _LOGGER.debug("Set temperature: %s", target_temp)
         await self._post({"temperature": f"{target_temp}"})
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
