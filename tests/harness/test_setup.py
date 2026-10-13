@@ -30,6 +30,12 @@ def _mock_cloud(aioclient_mock) -> None:
     aioclient_mock.get(DEVICES_URL, json=devices)
 
 
+def _state(hass: HomeAssistant, entity_id: str) -> str:
+    state = hass.states.get(entity_id)
+    assert state is not None, entity_id
+    return state.state
+
+
 async def test_config_entry_creates_user_visible_entities(
     hass: HomeAssistant, aioclient_mock
 ) -> None:
@@ -41,20 +47,19 @@ async def test_config_entry_creates_user_visible_entities(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    climate = hass.states.get("climate.living_room_nature_remo_living_ac")
-    assert climate is not None
-    assert climate.state == "cool"
-    assert hass.states.get("sensor.meter_nature_remo_meter_power").state == "450.0"
-    assert hass.states.get("sensor.meter_nature_remo_meter_energy_consumed").state == "100.0"
-    assert hass.states.get("switch.living_room_nature_remo_fan").state == "off"
-    assert hass.states.get("light.living_room_nature_remo_ceiling").state == "on"
-    assert hass.states.get("media_player.living_room_nature_remo_tv") is not None
-    assert hass.states.get("sensor.hall_nature_remo_hall_temperature").state == "21.5"
-    assert hass.states.get("sensor.hall_nature_remo_hall_humidity").state == "48"
-    assert hass.states.get("sensor.hall_nature_remo_hall_illuminance").state == "120"
+    assert _state(hass, "climate.living_room_nature_remo_living_ac") == "cool"
+    assert _state(hass, "sensor.meter_nature_remo_meter_power") == "450.0"
+    assert _state(hass, "sensor.meter_nature_remo_meter_energy_consumed") == "100.0"
+    assert _state(hass, "switch.living_room_nature_remo_fan") == "off"
+    assert _state(hass, "light.living_room_nature_remo_ceiling") == "on"
+    assert _state(hass, "media_player.living_room_nature_remo_tv") == "off"
+    assert _state(hass, "sensor.hall_nature_remo_hall_temperature") == "21.5"
+    assert _state(hass, "sensor.hall_nature_remo_hall_humidity") == "48"
+    assert _state(hass, "sensor.hall_nature_remo_hall_illuminance") == "120"
 
-    authorization = aioclient_mock.mock_calls[0][3]["Authorization"]
-    assert authorization == "Bearer test-token"
+    appliance_calls = [call for call in aioclient_mock.mock_calls if str(call[1]) == APPLIANCES_URL]
+    assert appliance_calls
+    assert appliance_calls[0][3]["Authorization"] == "Bearer test-token"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -78,7 +83,7 @@ async def test_user_flow_accepts_a_working_token(hass: HomeAssistant, aioclient_
     assert result["title"] == "Nature Remo"
     assert result["data"][CONF_ACCESS_TOKEN] == "test-token"
     await hass.async_block_till_done()
-    assert hass.states.get("climate.living_room_nature_remo_living_ac") is not None
+    assert _state(hass, "climate.living_room_nature_remo_living_ac") == "cool"
 
 
 async def test_user_flow_reports_a_rejected_token(hass: HomeAssistant, aioclient_mock) -> None:
