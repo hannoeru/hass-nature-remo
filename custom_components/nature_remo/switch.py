@@ -6,9 +6,11 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DOMAIN, NatureRemoAPI, NatureRemoBase
@@ -46,7 +48,7 @@ def _has_switch_signal(signals: Iterable[dict[str, Any]]) -> bool:
     return bool(images & {SIGNAL_IMAGE_ON, SIGNAL_IMAGE_OFF, SIGNAL_IMAGE_TOGGLE})
 
 
-class NatureRemoSwitch(NatureRemoBase, SwitchEntity):
+class NatureRemoSwitch(NatureRemoBase, SwitchEntity, RestoreEntity):
     """Representation of a generic Nature Remo IR appliance as a switch."""
 
     _attr_assumed_state = True
@@ -61,6 +63,13 @@ class NatureRemoSwitch(NatureRemoBase, SwitchEntity):
         self._api = api
         self._signals = appliance.get("signals") or []
         self._is_on = False
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the assumed on/off state from the previous run."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state is not None and last_state.state == STATE_ON:
+            self._is_on = True
 
     @property
     def is_on(self) -> bool:
