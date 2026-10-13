@@ -94,7 +94,10 @@ class NatureRemoLight(NatureRemoBase, LightEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        appliance = self.coordinator.data["appliances"][self._appliance_id]
+        appliance = (self.coordinator.data.get("appliances") or {}).get(self._appliance_id)
+        if appliance is None:
+            self.async_write_ha_state()
+            return
         self._buttons = _button_names(appliance)
         self._update((appliance.get("light") or {}).get("state"))
         self.async_write_ha_state()
