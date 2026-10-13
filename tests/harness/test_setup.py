@@ -56,6 +56,10 @@ async def test_config_entry_creates_user_visible_entities(
     assert _state(hass, "sensor.hall_nature_remo_hall_temperature") == "21.5"
     assert _state(hass, "sensor.hall_nature_remo_hall_humidity") == "48"
     assert _state(hass, "sensor.hall_nature_remo_hall_illuminance") == "120"
+    # The Remo that owns the air conditioner still reports its own sensors.
+    assert _state(hass, "sensor.living_room_nature_remo_living_room_temperature") == "24.0"
+    assert _state(hass, "sensor.living_room_nature_remo_living_room_humidity") == "40"
+    assert _state(hass, "sensor.living_room_nature_remo_living_room_illuminance") == "80"
 
     appliance_calls = [call for call in aioclient_mock.mock_calls if str(call[1]) == APPLIANCES_URL]
     assert appliance_calls
