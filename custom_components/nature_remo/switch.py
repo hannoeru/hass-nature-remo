@@ -69,8 +69,8 @@ class NatureRemoSwitch(NatureRemoBase, SwitchEntity):
 
     @property
     def available(self) -> bool:
-        """Return whether this switch has usable IR signals."""
-        return _has_switch_signal(self._signals)
+        """Return whether the last poll succeeded and this switch has IR signals."""
+        return super().available and _has_switch_signal(self._signals)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the IR appliance."""

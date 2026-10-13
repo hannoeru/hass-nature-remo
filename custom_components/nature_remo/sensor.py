@@ -111,6 +111,8 @@ class NatureRemoCumulativeEnergySensorBase(NatureRemoBase, SensorEntity):
 
     @property
     def available(self) -> bool:
+        if not super().available:
+            return False
         appliance = self.coordinator.data["appliances"][self._appliance_id]
         try:
             return has_epc(_smart_meter_properties(appliance), self._epc)

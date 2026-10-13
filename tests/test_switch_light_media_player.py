@@ -17,6 +17,7 @@ class FakeCoordinator:
 
     def __init__(self, data: dict[str, Any] | None = None) -> None:
         self.data = data or {}
+        self.last_update_success = True
 
 
 class FakeApi:
@@ -61,6 +62,24 @@ def test_switch_sends_on_off_or_toggle_signals() -> None:
         ("/signals/signal-off/send", {}),
     ]
     assert switch.is_on is False
+
+
+def test_switch_unavailable_when_coordinator_update_failed() -> None:
+    appliance = {
+        "id": "appliance-1",
+        "nickname": "Fan",
+        "type": "IR",
+        "device": _device(),
+        "signals": [
+            {"id": "signal-on", "name": "On", "image": "ico_on"},
+            {"id": "signal-off", "name": "Off", "image": "ico_off"},
+        ],
+    }
+    coordinator = FakeCoordinator()
+    coordinator.last_update_success = False
+    switch = NatureRemoSwitch(coordinator, FakeApi(), appliance)  # type: ignore[arg-type]
+
+    assert switch.available is False
 
 
 def test_switch_raises_when_requested_direction_has_no_signal() -> None:
