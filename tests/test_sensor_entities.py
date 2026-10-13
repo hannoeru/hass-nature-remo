@@ -15,6 +15,7 @@ class FakeCoordinator:
 
     def __init__(self, data: dict[str, Any]) -> None:
         self.data = data
+        self.last_update_success = True
 
 
 def test_device_sensor_unique_ids_are_sensor_specific() -> None:
@@ -78,3 +79,31 @@ def test_cumulative_energy_sensor_calculates_from_coordinator_data() -> None:
     ] = 110
 
     assert sensor.native_value == 22
+
+
+def test_cumulative_energy_unavailable_when_coordinator_update_failed() -> None:
+    appliance = {
+        "id": "appliance-1",
+        "nickname": "Meter",
+        "device": {"id": "device-1", "name": "Remo E"},
+    }
+    coordinator = FakeCoordinator(
+        {
+            "appliances": {
+                "appliance-1": {
+                    **appliance,
+                    "smart_meter": {
+                        "echonetlite_properties": [
+                            {"epc": 224, "val": 100},
+                            {"epc": 211, "val": 1},
+                            {"epc": 225, "val": 0},
+                        ]
+                    },
+                }
+            }
+        }
+    )
+    coordinator.last_update_success = False
+    sensor = NatureRemoEnergySensor(coordinator, appliance)  # type: ignore[arg-type]
+
+    assert sensor.available is False
