@@ -9,6 +9,15 @@
           "cool_temperature": "預設冷氣溫度",
           "heat_temperature": "預設暖氣溫度"
         }
+      },
+      "reauth_confirm": {
+        "title": "重新驗證 Nature Remo",
+        "description": "存取權杖已被拒絕。請輸入新的權杖。",
+        "data": {
+          "access_token": "存取權杖",
+          "cool_temperature": "預設冷氣溫度",
+          "heat_temperature": "預設暖氣溫度"
+        }
       }
     },
     "error": {
@@ -16,7 +25,8 @@
       "unknown": "發生未預期的錯誤"
     },
     "abort": {
-      "already_configured": "Nature Remo 已設定完成"
+      "already_configured": "Nature Remo 已設定完成",
+      "reauth_successful": "重新驗證成功"
     }
   }
 }

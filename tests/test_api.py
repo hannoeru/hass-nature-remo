@@ -5,7 +5,7 @@ from typing import Any, Self
 
 import pytest
 from aiohttp import ClientError, ClientResponseError, RequestInfo
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from multidict import CIMultiDict, CIMultiDictProxy
 from yarl import URL
@@ -148,7 +148,7 @@ def test_get_does_not_retry_rejected_tokens(monkeypatch: pytest.MonkeyPatch) -> 
     session = SequenceSession([FakeResponse(None, status=401)])
     api = NatureRemoAPI("token", session)  # type: ignore[arg-type]
 
-    with pytest.raises(UpdateFailed):
+    with pytest.raises(ConfigEntryAuthFailed):
         asyncio.run(api.get())
 
     assert len(session.calls) == 1

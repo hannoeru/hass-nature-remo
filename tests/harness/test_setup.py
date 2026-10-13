@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
@@ -84,6 +84,39 @@ async def test_switch_restores_the_assumed_on_state(hass: HomeAssistant, aioclie
     await hass.async_block_till_done()
 
     assert _state(hass, "switch.living_room_nature_remo_fan") == "on"
+
+
+async def test_rejected_token_starts_reauth_and_accepts_a_new_one(
+    hass: HomeAssistant, aioclient_mock
+) -> None:
+    """A later HTTP 401 opens reauth, and a new token reloads the entry."""
+    _mock_cloud(aioclient_mock)
+    entry = MockConfigEntry(domain=DOMAIN, data=_entry_data(), unique_id=DOMAIN)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(APPLIANCES_URL, status=HTTPStatus.UNAUTHORIZED)
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+    aioclient_mock.clear_requests()
+    _mock_cloud(aioclient_mock)
+    new_data = _entry_data()
+    new_data[CONF_ACCESS_TOKEN] = "replacement-token"
+    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], new_data)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "replacement-token"
+    assert _state(hass, "climate.living_room_nature_remo_living_ac") == "cool"
 
 
 async def test_user_flow_accepts_a_working_token(hass: HomeAssistant, aioclient_mock) -> None:

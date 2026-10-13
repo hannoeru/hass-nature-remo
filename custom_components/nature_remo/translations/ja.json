@@ -9,6 +9,15 @@
           "cool_temperature": "冷房の既定温度",
           "heat_temperature": "暖房の既定温度"
         }
+      },
+      "reauth_confirm": {
+        "title": "Nature Remo の再認証",
+        "description": "アクセストークンが拒否されました。新しいトークンを入力してください。",
+        "data": {
+          "access_token": "アクセストークン",
+          "cool_temperature": "冷房の既定温度",
+          "heat_temperature": "暖房の既定温度"
+        }
       }
     },
     "error": {
@@ -16,7 +25,8 @@
       "unknown": "予期しないエラー"
     },
     "abort": {
-      "already_configured": "Nature Remo はすでに設定されています"
+      "already_configured": "Nature Remo はすでに設定されています",
+      "reauth_successful": "再認証が完了しました"
     }
   }
 }
