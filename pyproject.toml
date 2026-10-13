@@ -15,6 +15,7 @@ dev = [
     "mypy>=2.1.0",
     "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
+    "pytest-homeassistant-custom-component==0.13.332",
     "ruff>=0.15.14",
 ]
 
@@ -24,4 +25,5 @@ line-length = 100
 target-version = "py314"
 
 [tool.pytest.ini_options]
-# addopts = "--base-url http://0.0.0.0:5001"  # Commented out - requires pytest-base-url plugin
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

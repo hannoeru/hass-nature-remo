@@ -174,6 +174,14 @@ uv sync --dev
 ### Quality checks
 
 ```sh
+scripts/verify.sh
+```
+
+That command installs dependencies, then runs ruff, mypy, and pytest. Pytest includes `tests/harness`, which loads the integration in Home Assistant with mocked Nature Remo API responses. Agents should follow `.agents/skills/verify/SKILL.md` (the same text is in `.claude/skills/verify/SKILL.md`).
+
+The individual checks are:
+
+```sh
 uv run ruff check
 uv run ruff format --check
 uv run mypy -p custom_components.nature_remo
