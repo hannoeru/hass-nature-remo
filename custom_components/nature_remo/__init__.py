@@ -174,6 +174,20 @@ def _retryable_get_error(err: ClientError) -> bool:
     return True
 
 
+def _device_info(device: dict[str, Any]) -> DeviceInfo:
+    """Return registry info with the product name and the hardware serial separated."""
+    firmware = device.get("firmware_version") or ""
+    model = firmware.split("/", 1)[0] if firmware else "Nature Remo"
+    return {
+        "identifiers": {(DOMAIN, device["id"])},
+        "name": device["name"] or "Unknown Device",
+        "manufacturer": "Nature Remo",
+        "model": model,
+        "serial_number": device.get("serial_number"),
+        "sw_version": firmware or "Unknown Version",
+    }
+
+
 class NatureRemoBase(CoordinatorEntity):
     """Nature Remo entity base class."""
 
@@ -201,13 +215,7 @@ class NatureRemoBase(CoordinatorEntity):
     @cached_property
     def device_info(self) -> DeviceInfo | None:
         """Return the device info for the sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._device["id"])},
-            "name": self._device["name"] or "Unknown Device",
-            "manufacturer": "Nature Remo",
-            "model": self._device.get("serial_number") or "Unknown Model",
-            "sw_version": self._device.get("firmware_version") or "Unknown Version",
-        }
+        return _device_info(self._device)
 
 
 class NatureRemoDeviceBase(CoordinatorEntity):
@@ -236,10 +244,4 @@ class NatureRemoDeviceBase(CoordinatorEntity):
     @cached_property
     def device_info(self) -> DeviceInfo | None:
         """Return the device info for the sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._device["id"])},
-            "name": self._device["name"] or "Unknown Device",
-            "manufacturer": "Nature Remo",
-            "model": self._device.get("serial_number") or "Unknown Model",
-            "sw_version": self._device.get("firmware_version") or "Unknown Version",
-        }
+        return _device_info(self._device)

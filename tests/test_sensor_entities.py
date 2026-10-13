@@ -21,6 +21,36 @@ class FakeCoordinator:
         self.last_update_success = True
 
 
+def test_device_info_separates_model_and_serial() -> None:
+    device = {
+        "id": "device-1",
+        "name": "Living Room",
+        "firmware_version": "Remo/1.2.3",
+        "serial_number": "SN-1",
+        "newest_events": {"te": {"val": 21.5}},
+    }
+    sensor = NatureRemoTemperatureSensor(FakeCoordinator({"devices": {}}), device)  # type: ignore[arg-type]
+    info = sensor.device_info
+    assert info is not None
+    assert info["model"] == "Remo"
+    assert info["serial_number"] == "SN-1"
+    assert info["sw_version"] == "Remo/1.2.3"
+    assert info["identifiers"] == {("nature_remo", "device-1")}
+
+    appliance = {"id": "appliance-1", "nickname": "Meter", "device": device}
+    power = NatureRemoE(FakeCoordinator({"appliances": {}}), appliance)  # type: ignore[arg-type]
+    assert power.device_info == info
+
+    unnamed = {"id": "device-2", "name": "", "newest_events": {}}
+    bare = NatureRemoTemperatureSensor(FakeCoordinator({"devices": {}}), unnamed)  # type: ignore[arg-type]
+    bare_info = bare.device_info
+    assert bare_info is not None
+    assert bare_info["model"] == "Nature Remo"
+    assert bare_info["name"] == "Unknown Device"
+    assert bare_info["serial_number"] is None
+    assert bare_info["sw_version"] == "Unknown Version"
+
+
 def test_power_sensor_is_a_measurement() -> None:
     appliance = {
         "id": "appliance-1",
